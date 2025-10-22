@@ -151,7 +151,8 @@ def main():
 
     # --- 1. Create Output Directory ---
     output_dir = fileio.create_run_output_directory(
-        run_name, selected_case, selected_model, selected_persona_set
+        run_name, selected_case, selected_model, selected_persona_set,
+        reasoning=selected_reasoning, verbosity=selected_verbosity
     )
     logger.info(f"Created output directory: {output_dir}")
 

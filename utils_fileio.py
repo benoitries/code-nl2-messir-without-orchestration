@@ -59,9 +59,18 @@ def write_file_content(filepath, content):
     except Exception as e:
         logger.error(f"Failed to write content to {filepath}: {e}")
 
-def create_run_output_directory(run_name, case, model, persona_set):
+def create_run_output_directory(run_name, case, model, persona_set, reasoning=None, verbosity=None):
     """Creates a unique directory for the agent run outputs."""
-    dir_name = f"{run_name}-{case}-{model}-{persona_set}"
+    # Build directory name with all parameters to ensure uniqueness
+    dir_parts = [run_name, case, model, persona_set]
+    
+    # Add reasoning and verbosity if provided
+    if reasoning:
+        dir_parts.append(f"reason-{reasoning}")
+    if verbosity:
+        dir_parts.append(f"verb-{verbosity}")
+    
+    dir_name = "-".join(dir_parts)
     output_path = os.path.join(OUTPUT_DIR, dir_name)
     os.makedirs(output_path, exist_ok=True)
     return output_path
