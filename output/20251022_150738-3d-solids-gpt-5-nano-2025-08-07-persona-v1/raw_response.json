@@ -1,0 +1,72 @@
+{
+    "id": "resp_0c3fd28fcf115a1d0068f8d71d06508193b670d589c12cf317",
+    "created_at": 1761138461.0,
+    "error": null,
+    "incomplete_details": null,
+    "instructions": "You are an expert system that converts NetLogo models to MUCIM-compliant PlantUML diagrams. Follow all instructions and use the provided context to generate the output, using the specified markers to structure your response.",
+    "metadata": {},
+    "model": "gpt-5-nano-2025-08-07",
+    "object": "response",
+    "output": [
+        {
+            "id": "rs_0c3fd28fcf115a1d0068f8d71f9d708193b9922526d7590085",
+            "summary": [],
+            "type": "reasoning"
+        },
+        {
+            "id": "msg_0c3fd28fcf115a1d0068f8d757186881939c8d50a8745c2d15",
+            "content": [
+                {
+                    "annotations": [],
+                    "text": "[START_INITIAL_DIAGRAM]\n@startuml\nparticipant System as system\nparticipant \"operator:ActOperator\" as operator\n\noperator -> system : oeSetShape(\"sphere\")\nactivate operator #274364\ndeactivate operator\n\nsystem --> operator : ieSphereRendered(\"sphere\")\nactivate operator #C0EBFD\ndeactivate operator\n\noperator -> system : oeSetShape(\"cube-filled\")\nactivate operator #274364\ndeactivate operator\n\nsystem --> operator : ieCubeRendered(\"cube-filled\")\nactivate operator #C0EBFD\ndeactivate operator\n@enduml\n[END_INITIAL_DIAGRAM]\n\n[START_INITIAL_AUDIT]\n{\n  \"verdict\": \"compliant\",\n  \"non-compliant-rules\": []\n}\n[END_INITIAL_AUDIT]",
+                    "type": "output_text",
+                    "logprobs": []
+                }
+            ],
+            "role": "assistant",
+            "status": "completed",
+            "type": "message"
+        }
+    ],
+    "parallel_tool_calls": true,
+    "temperature": 1.0,
+    "tool_choice": "auto",
+    "tools": [],
+    "top_p": 1.0,
+    "background": false,
+    "max_output_tokens": null,
+    "max_tool_calls": null,
+    "previous_response_id": null,
+    "prompt_cache_key": null,
+    "reasoning": {
+        "effort": "medium",
+        "summary": null
+    },
+    "safety_identifier": null,
+    "service_tier": "default",
+    "status": "completed",
+    "text": {
+        "format": {
+            "type": "text"
+        },
+        "verbosity": "medium"
+    },
+    "top_logprobs": 0,
+    "truncation": "disabled",
+    "usage": {
+        "input_tokens": 18486,
+        "input_tokens_details": {
+            "cached_tokens": 0
+        },
+        "output_tokens": 5792,
+        "output_tokens_details": {
+            "reasoning_tokens": 5632
+        },
+        "total_tokens": 24278
+    },
+    "user": null,
+    "billing": {
+        "payer": "developer"
+    },
+    "store": true
+}

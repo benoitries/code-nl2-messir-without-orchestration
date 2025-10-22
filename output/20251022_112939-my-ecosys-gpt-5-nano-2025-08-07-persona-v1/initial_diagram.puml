@@ -1,0 +1,12 @@
+@startuml
+participant System as system
+participant "actOperator:ActOperator" as actOperator
+
+actOperator -> system : oeInstallHPC("config=default")
+activate actOperator
+deactivate actOperator
+
+system --> actOperator : ieHPCInstallStatus("OK")
+activate actOperator
+deactivate actOperator
+@enduml

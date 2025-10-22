@@ -1,0 +1,12 @@
+@startuml
+participant System as system
+participant "theUser:ActInterface" as theUser
+
+theUser -> system : oeSetupSphere(shapeSize=60, numTurtles=100)
+activate theUser
+deactivate theUser
+
+system --> theUser : ieSetupDone("sphere", shapeSize=60, numTurtles=100)
+activate theUser
+deactivate theUser
+@enduml

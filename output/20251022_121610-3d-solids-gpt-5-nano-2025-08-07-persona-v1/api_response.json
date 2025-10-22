@@ -1,0 +1,72 @@
+{
+    "id": "resp_069eed34786d2ad70068f8aeecfb54819294e1fdc3e50d9b43",
+    "created_at": 1761128173.0,
+    "error": null,
+    "incomplete_details": null,
+    "instructions": "You are an expert system that converts NetLogo models to MUCIM-compliant PlantUML diagrams. Follow all instructions and use the provided context to generate the output, using the specified markers to structure your response.",
+    "metadata": {},
+    "model": "gpt-5-nano-2025-08-07",
+    "object": "response",
+    "output": [
+        {
+            "id": "rs_069eed34786d2ad70068f8aeef30988192823de24b59eae899",
+            "summary": [],
+            "type": "reasoning"
+        },
+        {
+            "id": "msg_069eed34786d2ad70068f8af0ee37481929f3cee7d7d29385a",
+            "content": [
+                {
+                    "annotations": [],
+                    "text": "[START_INITIAL_DIAGRAM]\n@startuml\nparticipant System as system\nparticipant \"actUser:ActUser\" as actUser\n\nactUser -> system : oeInvokeSetupSphere()\nactivate actUser\ndeactivate actUser\n\nsystem --> actUser : ieSphereSetupComplete()\nactivate actUser\ndeactivate actUser\n@enduml\n[END_INITIAL_DIAGRAM]\n[START_INITIAL_AUDIT]\n{\n  \"verdict\": \"compliant\",\n  \"non-compliant-rules\": []\n}\n[END_INITIAL_AUDIT]",
+                    "type": "output_text",
+                    "logprobs": []
+                }
+            ],
+            "role": "assistant",
+            "status": "completed",
+            "type": "message"
+        }
+    ],
+    "parallel_tool_calls": true,
+    "temperature": 1.0,
+    "tool_choice": "auto",
+    "tools": [],
+    "top_p": 1.0,
+    "background": false,
+    "max_output_tokens": null,
+    "max_tool_calls": null,
+    "previous_response_id": null,
+    "prompt_cache_key": null,
+    "reasoning": {
+        "effort": "medium",
+        "summary": null
+    },
+    "safety_identifier": null,
+    "service_tier": "default",
+    "status": "completed",
+    "text": {
+        "format": {
+            "type": "text"
+        },
+        "verbosity": "medium"
+    },
+    "top_logprobs": 0,
+    "truncation": "disabled",
+    "usage": {
+        "input_tokens": 18486,
+        "input_tokens_details": {
+            "cached_tokens": 0
+        },
+        "output_tokens": 4722,
+        "output_tokens_details": {
+            "reasoning_tokens": 4608
+        },
+        "total_tokens": 23208
+    },
+    "user": null,
+    "billing": {
+        "payer": "developer"
+    },
+    "store": true
+}

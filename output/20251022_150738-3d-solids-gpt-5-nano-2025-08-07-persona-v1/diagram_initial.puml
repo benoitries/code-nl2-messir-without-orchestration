@@ -1,0 +1,20 @@
+@startuml
+participant System as system
+participant "operator:ActOperator" as operator
+
+operator -> system : oeSetShape("sphere")
+activate operator #274364
+deactivate operator
+
+system --> operator : ieSphereRendered("sphere")
+activate operator #C0EBFD
+deactivate operator
+
+operator -> system : oeSetShape("cube-filled")
+activate operator #274364
+deactivate operator
+
+system --> operator : ieCubeRendered("cube-filled")
+activate operator #C0EBFD
+deactivate operator
+@enduml

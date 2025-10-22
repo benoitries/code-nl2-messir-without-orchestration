@@ -1,0 +1,15 @@
+{
+  "verdict": "non-compliant",
+  "non-compliant-rules": [
+    {
+      "rule": "GCS2_SYS_COLOR",
+      "line": "2",
+      "msg": "System participant declaration missing required background color #E8C28A. Extract: 'participant System as system'"
+    },
+    {
+      "rule": "GCS4_ACT_COLOR",
+      "line": "3-5",
+      "msg": "Actor participant declarations missing required background color #FFF3B3. Extracts: 'participant \"actTownHall:ActTownHall\" as actTownHall', 'participant \"actEcologist:ActEcologist\" as actEcologist', 'participant \"actMonitor:ActMonitor\" as actMonitor'"
+    }
+  ]
+}

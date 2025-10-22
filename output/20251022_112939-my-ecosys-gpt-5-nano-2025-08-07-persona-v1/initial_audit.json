@@ -1,0 +1,10 @@
+{
+  "verdict": "non-compliant",
+  "non-compliant-rules": [
+    {
+      "rule": "AS2_SYS_DECLARED_FIRST",
+      "line": "1",
+      "msg": "System must be declared first before all actors."
+    }
+    ]
+}
