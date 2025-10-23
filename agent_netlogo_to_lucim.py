@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Main script for the NetLogo to MUCIM conversion agent.
+Main script for the NetLogo to LUCIM conversion agent.
 This single agent handles the entire pipeline from NetLogo code to a compliant PlantUML diagram.
 """
 
@@ -35,7 +35,7 @@ def build_api_input(input_contents):
     
     # Base instruction for the AI (part of the user prompt)
     base_prompt = (
-        "Generate a MUCIM compliant puml diagram taking as input the netlogo code and netlogo simulation screenshots. "
+        "Generate a LUCIM compliant puml diagram taking as input the netlogo code and netlogo simulation screenshots. "
         "Structure your response with clear markers. First, provide the initial diagram within [START_INITIAL_DIAGRAM] and [END_INITIAL_DIAGRAM] markers. "
         "Then, provide the initial audit results within [START_INITIAL_AUDIT] and [END_INITIAL_AUDIT] markers. "
         "If the audit is non-compliant, you should correct the puml diagram. Provide the corrected diagram within [START_CORRECTED_DIAGRAM] and [END_CORRECTED_DIAGRAM] markers. "
@@ -89,7 +89,7 @@ def parse_and_save_artifacts(output_text, output_dir, logger):
 
 def main():
     """
-    Main function to run the NetLogo to MUCIM conversion agent.
+    Main function to run the NetLogo to LUCIM conversion agent.
     """
     # Ensure all necessary directories exist before proceeding
     cfg.ensure_directories()
@@ -98,7 +98,7 @@ def main():
     if not openai_client.validate_openai_key():
         sys.exit(1)
 
-    parser = argparse.ArgumentParser(description="Run the NetLogo to MUCIM conversion agent.")
+    parser = argparse.ArgumentParser(description="Run the NetLogo to LUCIM conversion agent.")
     parser.add_argument("--case", type=str, help="The NetLogo case study to process.")
     parser.add_argument("--persona_set", type=str, help="The persona set to use.")
     parser.add_argument("--model", type=str, help="The AI model to use.")
@@ -126,11 +126,22 @@ def main():
         selected_verbosity = selected_verbosity or ui.select_text_verbosity()
     else:
         # Fallback to defaults for non-interactive mode if args are missing
-        selected_case = selected_case or fileio.get_netlogo_cases()[0]
+        available_cases = fileio.get_netlogo_cases()
+        selected_case = selected_case or (available_cases[0] if available_cases else "3d-solids")
         selected_persona_set = selected_persona_set or cfg.DEFAULT_PERSONA_SET
         selected_model = selected_model or "gpt-5-nano-2025-08-07"
         selected_reasoning = selected_reasoning or "medium"
         selected_verbosity = selected_verbosity or "medium"
+    
+    # Handle case where no case was selected
+    if not selected_case:
+        available_cases = fileio.get_netlogo_cases()
+        if available_cases:
+            selected_case = available_cases[0]
+            print(f"No case selected, using default: {selected_case}")
+        else:
+            print("No NetLogo cases found. Please check the input directory.")
+            sys.exit(1)
 
     # Setup logging after all parameters are determined
     logger = log.setup_run_logger(
@@ -191,6 +202,22 @@ def main():
     api_input = build_api_input(input_contents)
     # For logging purposes, let's show the text part of the prompt
     logger.debug(f"Prompt Text: {api_input[0]['content'][0]['text']}")
+    
+    # Save the complete input instructions to a file (including images)
+    full_prompt_text = api_input[0]['content'][0]['text']
+    
+    # Add image information to the prompt text
+    if "netlogo_images" in input_contents and input_contents["netlogo_images"]:
+        full_prompt_text += f"\n\n--- IMAGES ---\n"
+        full_prompt_text += f"Number of NetLogo interface images: {len(input_contents['netlogo_images'])}\n"
+        for i, img_base64 in enumerate(input_contents["netlogo_images"], 1):
+            full_prompt_text += f"Image {i}: Base64 encoded PNG (length: {len(img_base64)} characters)\n"
+            # Optionally include a small preview of the base64 (first 100 chars)
+            full_prompt_text += f"Base64 preview: {img_base64[:100]}...\n"
+    
+    input_instructions_path = os.path.join(output_dir, "input-instructions.md")
+    fileio.write_file_content(input_instructions_path, full_prompt_text)
+    logger.info(f"Saved complete input instructions to: {input_instructions_path}")
 
 
     # --- 3. Call the AI model ---
@@ -203,7 +230,7 @@ def main():
         # Define API configuration for the Responses API
         api_config = {
             "model": selected_model,
-            "instructions": "You are an expert system that converts NetLogo models to MUCIM-compliant PlantUML diagrams. Follow all instructions and use the provided context to generate the output, using the specified markers to structure your response.",
+            "instructions": "You are an expert system that converts NetLogo models to LUCIM-compliant PlantUML diagrams. Follow all instructions and use the provided context to generate the output, using the specified markers to structure your response.",
             "input": api_input,
         }
         

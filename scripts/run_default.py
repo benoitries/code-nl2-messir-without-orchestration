@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Default run script for the single-agent NetLogo to MUCIM conversion.
+Default run script for the single-agent NetLogo to LUCIM conversion.
 Launches the agent in non-interactive mode with default parameters.
 """
 

@@ -1,16 +1,16 @@
-# NetLogo to MESSIR Single-Agent Conversion System
+# NetLogo to LUCIM Single-Agent Conversion System
 
-A streamlined AI system that automatically converts NetLogo agent-based models into MUCIM-compliant PlantUML diagrams using a single, powerful AI agent.
+A streamlined AI system that automatically converts NetLogo agent-based models into LUCIM-compliant PlantUML diagrams using a single, powerful AI agent.
 
 ## 🚀 Overview
 
-This project implements a single-step pipeline that transforms NetLogo simulation models into standardized  PlantUML diagrams. The system uses one AI agent to handle the entire workflow, from parsing the NetLogo code to generating a MUCIM-compliant, audited, and corrected diagram.
+This project implements a single-step pipeline that transforms NetLogo simulation models into standardized  PlantUML diagrams. The system uses one AI agent to handle the entire workflow, from parsing the NetLogo code to generating a LUCIM-compliant, audited, and corrected diagram.
 
 ### Key Features
 
 - **Single-Agent Architecture**: A single, consolidated AI agent handles the entire conversion process.
 - **Automated End-to-End Conversion**: From NetLogo code to a final, compliant PlantUML diagram.
-- **MESSIR Compliance**: Ensures generated diagrams follow MESSIR-UCI standards through built-in auditing and correction loops.
+- **LUCIM Compliance**: Ensures generated diagrams follow LUCIM-UCI standards through built-in auditing and correction loops.
 - **Multiple AI Model Support**: Compatible with various large language models.
 - **Simplified Workflow**: Removes the complexity of a multi-agent orchestration pipeline.
 
@@ -27,10 +27,10 @@ For a concise overview of the agent's workflow, see:
 The agent performs the following logical steps internally:
 1.  **Code and Image Parsing**: Extracts and structures NetLogo code components and analyzes UI screenshots.
 2.  **Semantic Analysis**: Analyzes behavioral patterns and agent interactions.
-3.  **MESSIR Mapping**: Maps NetLogo concepts to MESSIR entities and relationships.
-4.  **Scenario Generation**: Generates MESSIR scenario descriptions.
+3.  **LUCIM Mapping**: Maps NetLogo concepts to LUCIM entities and relationships.
+4.  **Scenario Generation**: Generates LUCIM scenario descriptions.
 5.  **PlantUML Generation**: Creates PlantUML diagram code from the scenarios.
-6.  **Compliance Auditing**: Validates the diagram against MESSIR/UCI rules.
+6.  **Compliance Auditing**: Validates the diagram against LUCIM/UCI rules.
 7.  **Correction Loop**: If non-compliant, fixes the diagram and re-audits until compliance is achieved or a limit is reached.
 8.  **Final Output**: Produces the final, compliant PlantUML diagram and an audit report.
 

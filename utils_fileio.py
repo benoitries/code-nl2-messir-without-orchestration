@@ -11,7 +11,7 @@ import os
 import pathlib
 from typing import Dict, Any, List, Optional
 
-from utils_config_constants import INPUT_NETLOGO_DIR, INPUT_ICRASH_DIR, MESSIR_RULES_FILE, LOG_DIR, OUTPUT_DIR
+from utils_config_constants import INPUT_NETLOGO_DIR, LUCIM_RULES_FILE, LOG_DIR, OUTPUT_DIR
 from utils_path import get_run_base_dir
 
 # Configure logging
