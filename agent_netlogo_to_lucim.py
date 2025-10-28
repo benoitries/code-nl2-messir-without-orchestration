@@ -95,7 +95,15 @@ def main():
     cfg.ensure_directories()
 
     # Validate OpenAI API key before doing anything else
+    # Use the robust API key validation
+try:
+    from utils_api_key import validate_openai_key
+    if not validate_openai_key():
+        sys.exit(1)
+except ImportError:
+    # Fallback to old validation
     if not openai_client.validate_openai_key():
+        sys.exit(1)
         sys.exit(1)
 
     parser = argparse.ArgumentParser(description="Run the NetLogo to LUCIM conversion agent.")
@@ -193,32 +201,52 @@ def main():
         if encoded_images:
             input_contents["netlogo_images"] = encoded_images
 
+        # Load task instructions from single-agent-task file
+        task_instructions = None
+        try:
+            task_file_path = os.path.join("input-task", "single-agent-task")
+            if os.path.exists(task_file_path):
+                task_instructions = fileio.read_file_content(task_file_path)
+                logger.info("Successfully loaded task instructions from single-agent-task")
+            else:
+                logger.warning("Task instructions file not found, using default prompt")
+        except Exception as e:
+            logger.warning(f"Failed to load task instructions: {e}")
+
     except Exception as e:
         logger.error(f"Failed to load input files: {e}", exc_info=True)
         sys.exit(1)
 
-    # --- 2. Build the final prompt ---
-    logger.info("Building the final prompt for the AI model...")
+    # --- 2. Build the complete system prompt ---
+    logger.info("Building the complete system prompt for the AI model...")
     api_input = build_api_input(input_contents)
     # For logging purposes, let's show the text part of the prompt
     logger.debug(f"Prompt Text: {api_input[0]['content'][0]['text']}")
     
-    # Save the complete input instructions to a file (including images)
-    full_prompt_text = api_input[0]['content'][0]['text']
+    # Build the complete user prompt (including images)
+    user_prompt = api_input[0]['content'][0]['text']
     
-    # Add image information to the prompt text
+    # Add image information to the user prompt
     if "netlogo_images" in input_contents and input_contents["netlogo_images"]:
-        full_prompt_text += f"\n\n--- IMAGES ---\n"
-        full_prompt_text += f"Number of NetLogo interface images: {len(input_contents['netlogo_images'])}\n"
+        user_prompt += f"\n\n--- IMAGES ---\n"
+        user_prompt += f"Number of NetLogo interface images: {len(input_contents['netlogo_images'])}\n"
         for i, img_base64 in enumerate(input_contents["netlogo_images"], 1):
-            full_prompt_text += f"Image {i}: Base64 encoded PNG (length: {len(img_base64)} characters)\n"
+            user_prompt += f"Image {i}: Base64 encoded PNG (length: {len(img_base64)} characters)\n"
             # Optionally include a small preview of the base64 (first 100 chars)
-            full_prompt_text += f"Base64 preview: {img_base64[:100]}...\n"
+            user_prompt += f"Base64 preview: {img_base64[:100]}...\n"
     
-    input_instructions_path = os.path.join(output_dir, "input-instructions.md")
-    fileio.write_file_content(input_instructions_path, full_prompt_text)
-    logger.info(f"Saved complete input instructions to: {input_instructions_path}")
-
+    # Create single system_prompt variable for both API call and file generation
+    if task_instructions:
+        # Use task instructions from file as-is (with placeholders)
+        instructions = task_instructions
+    else:
+        # Fallback to original hardcoded prompt
+        instructions = "You are an expert system that converts NetLogo models to LUCIM-compliant PlantUML diagrams. Follow all instructions and use the provided context to generate the output, using the specified markers to structure your response."
+    
+    system_prompt = f"{instructions}\n\n{user_prompt}"
+    
+    # Write input-instructions.md BEFORE API call for debugging
+    fileio.write_input_instructions_before_api(output_dir, system_prompt)
 
     # --- 3. Call the AI model ---
     import time
@@ -230,8 +258,8 @@ def main():
         # Define API configuration for the Responses API
         api_config = {
             "model": selected_model,
-            "instructions": "You are an expert system that converts NetLogo models to LUCIM-compliant PlantUML diagrams. Follow all instructions and use the provided context to generate the output, using the specified markers to structure your response.",
-            "input": api_input,
+            "instructions": system_prompt,
+            "input": [{"role": "user", "content": [{"type": "input_text", "text": ""}]}],  # Empty since everything is in system_prompt
         }
         
         # Call the API and wait for the response

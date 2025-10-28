@@ -5,9 +5,14 @@ Centralizes all file and directory path constants
 """
 
 import os
+from utils_api_key import get_openai_api_key
 import pathlib
 from pathlib import Path
 from typing import Dict, Set
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Base directory (parent of this file)
 BASE_DIR = pathlib.Path(__file__).resolve().parent
