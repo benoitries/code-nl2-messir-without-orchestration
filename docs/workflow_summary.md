@@ -25,8 +25,9 @@ This document summarizes the workflow of the single `agent_netlogo_to_lucim` age
     -   Reference documents (e.g., iCrash PDFs).
     -   Configuration for the AI model, reasoning, and verbosity.
 
--   **Core Prompt**:
-    > "Generate a LUCIM compliant puml diagram taking as input the netlogo code and netlogo simulation screenshots. If the audit is non-compliant, you should correct the puml diagram, and run a final audit on the corrected diagram. Output is the final corrected pulm diagram and the final audit compliance status with possible the non-compliant rules if any."
+-   **Instructions Source (no fallbacks):**
+    -   The agent composes its system prompt exclusively from centralized inputs (task file + persona/DSL files). The mandatory task file is `input-task/single-agent-task`.
+    -   If the task file is missing or empty, the run fails fast with an explicit error. No embedded default prompt is used.
 
 -   **Outputs**:
     -   `output-response.json`: The raw structured response from the AI model.

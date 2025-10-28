@@ -32,19 +32,11 @@ except ImportError as e:
 
 def build_api_input(input_contents):
     """Builds the list of messages for the AI model's 'input' field."""
-    
-    # Base instruction for the AI (part of the user prompt)
-    base_prompt = (
-        "Generate a LUCIM compliant puml diagram taking as input the netlogo code and netlogo simulation screenshots. "
-        "Structure your response with clear markers. First, provide the initial diagram within [START_INITIAL_DIAGRAM] and [END_INITIAL_DIAGRAM] markers. "
-        "Then, provide the initial audit results within [START_INITIAL_AUDIT] and [END_INITIAL_AUDIT] markers. "
-        "If the audit is non-compliant, you should correct the puml diagram. Provide the corrected diagram within [START_CORRECTED_DIAGRAM] and [END_CORRECTED_DIAGRAM] markers. "
-        "Finally, run a final audit on the corrected diagram and provide the results within [START_FINAL_AUDIT] and [END_FINAL_AUDIT] markers. "
-        "The output should be only the final corrected puml diagram and the final audit compliance status with possible the non-compliant rules if any if a correction was needed, otherwise just the initial diagram and audit."
-    )
-    
-    # Combine all text inputs
-    text_parts = [base_prompt]
+
+    # Combine all text inputs (task instructions should head the list)
+    text_parts = []
+    if "task_instructions" in input_contents and input_contents["task_instructions"]:
+        text_parts.append(input_contents["task_instructions"])
     for key, content in input_contents.items():
         if key not in ["netlogo_images"]:
             text_parts.append(f"\n--- {key.upper()} ---\n{content}")
@@ -209,9 +201,9 @@ except ImportError:
                 task_instructions = fileio.read_file_content(task_file_path)
                 logger.info("Successfully loaded task instructions from single-agent-task")
             else:
-                logger.warning("Task instructions file not found, using default prompt")
+                logger.error("Mandatory TASK instructions file not found at input-task/single-agent-task")
         except Exception as e:
-            logger.warning(f"Failed to load task instructions: {e}")
+            logger.error(f"Failed to load task instructions: {e}")
 
     except Exception as e:
         logger.error(f"Failed to load input files: {e}", exc_info=True)
@@ -219,6 +211,9 @@ except ImportError:
 
     # --- 2. Build the complete system prompt ---
     logger.info("Building the complete system prompt for the AI model...")
+    # Include task instructions in input_contents for prompt composition
+    if task_instructions:
+        input_contents["task_instructions"] = task_instructions
     api_input = build_api_input(input_contents)
     # For logging purposes, let's show the text part of the prompt
     logger.debug(f"Prompt Text: {api_input[0]['content'][0]['text']}")
@@ -236,13 +231,11 @@ except ImportError:
             user_prompt += f"Base64 preview: {img_base64[:100]}...\n"
     
     # Create single system_prompt variable for both API call and file generation
-    if task_instructions:
-        # Use task instructions from file as-is (with placeholders)
-        instructions = task_instructions
-    else:
-        # Fallback to original hardcoded prompt
-        instructions = "You are an expert system that converts NetLogo models to LUCIM-compliant PlantUML diagrams. Follow all instructions and use the provided context to generate the output, using the specified markers to structure your response."
-    
+    if not task_instructions or not str(task_instructions).strip():
+        logger.error("Mandatory TASK instructions are missing. Expected file at input-task/single-agent-task. Aborting.")
+        sys.exit(2)
+
+    instructions = task_instructions
     system_prompt = f"{instructions}\n\n{user_prompt}"
     
     # Write input-instructions.md BEFORE API call for debugging
