@@ -75,6 +75,23 @@ def create_run_output_directory(run_name, case, model, persona_set, reasoning=No
     os.makedirs(output_path, exist_ok=True)
     return output_path
 
+def write_input_instructions_before_api(output_dir: str, system_prompt: str) -> None:
+    """
+    Write input-instructions.md file BEFORE making API call.
+    This ensures the file is available for debugging even if the API call fails.
+    
+    Args:
+        output_dir: Directory where to write the file
+        system_prompt: Complete system prompt to write to file
+    """
+    try:
+        input_instructions_path = os.path.join(output_dir, "input-instructions.md")
+        write_file_content(input_instructions_path, system_prompt)
+        logger.info(f"Successfully wrote complete system prompt to: {input_instructions_path}")
+    except Exception as e:
+        logger.error(f"Failed to write input-instructions.md before API call: {e}")
+        raise
+
 def load_and_encode_images(case_name, logger):
     """Finds, loads, and base64-encodes NetLogo interface images for a given case."""
     encoded_images = []
