@@ -27,6 +27,14 @@ def main():
         print("Please set it before running: export OPENAI_API_KEY='your-key-here'")
         sys.exit(1)
 
+    # Check if task file exists
+    task_file_path = os.path.join(project_root, "input-task", "single-agent-task")
+    if not os.path.exists(task_file_path):
+        print(f"Warning: Task instructions file not found at {task_file_path}")
+        print("Agent will use default prompt instead.")
+    else:
+        print(f"Found task instructions file: {task_file_path}")
+
     print("--- Starting Default Agent Run ---")
     
     # Run the agent with default non-interactive settings
