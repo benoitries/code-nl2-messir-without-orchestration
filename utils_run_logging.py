@@ -158,13 +158,13 @@ class OrchestratorLogger:
         lucim_environment_success = results.get("lucim_environment_synthesizer", {}).get("data") is not None
         scenario_success = results.get("lucim_scenario_synthesizer", {}).get("data") is not None
         plantuml_writer_success = results.get("plantuml_writer", {}).get("data") is not None
-        plantuml_messir_auditor_success = results.get("plantuml_messir_auditor", {}).get("data") is not None
-        plantuml_messir_corrector_success = results.get("plantuml_messir_corrector", {}).get("data") is not None
-        plantuml_messir_final_auditor_success = results.get("plantuml_messir_final_auditor", {}).get("data") is not None
+        plantuml_lucim_auditor_success = results.get("plantuml_lucim_auditor", {}).get("data") is not None
+        plantuml_lucim_corrector_success = results.get("plantuml_lucim_corrector", {}).get("data") is not None
+        plantuml_lucim_final_auditor_success = results.get("plantuml_lucim_final_auditor", {}).get("data") is not None
         
         # Check if optional steps were executed
-        plantuml_messir_corrector_executed = "plantuml_messir_corrector" in results
-        plantuml_messir_final_auditor_executed = "plantuml_messir_final_auditor" in results
+        plantuml_lucim_corrector_executed = "plantuml_lucim_corrector" in results
+        plantuml_lucim_final_auditor_executed = "plantuml_lucim_final_auditor" in results
         
         self.logger.info(f"{base_name} results:")
         self.logger.info(f"  Step 1 - Syntax Parser: {'✓' if netlogo_abstract_syntax_extractor_success else '✗'}")
@@ -172,14 +172,14 @@ class OrchestratorLogger:
         self.logger.info(f"  Step 3 - LUCIM Environment Synthesizer: {'✓' if lucim_environment_success else '✗'}")
         self.logger.info(f"  Step 4 - Scenario Writer: {'✓' if scenario_success else '✗'}")
         self.logger.info(f"  Step 5 - PlantUML Writer: {'✓' if plantuml_writer_success else '✗'}")
-        self.logger.info(f"  Step 6 - PlantUML Messir Auditor: {'✓' if plantuml_messir_auditor_success else '✗'}")
+        self.logger.info(f"  Step 6 - PlantUML LUCIM Auditor: {'✓' if plantuml_lucim_auditor_success else '✗'}")
         
-        if plantuml_messir_corrector_executed:
-            self.logger.info(f"  Step 7 - PlantUML Messir Corrector: {'✓' if plantuml_messir_corrector_success else '✗'}")
-        if plantuml_messir_final_auditor_executed:
-            self.logger.info(f"  Step 8 - PlantUML Messir Final Auditor: {'✓' if plantuml_messir_final_auditor_success else '✗'}")
+        if plantuml_lucim_corrector_executed:
+            self.logger.info(f"  Step 7 - PlantUML LUCIM Corrector: {'✓' if plantuml_lucim_corrector_success else '✗'}")
+        if plantuml_lucim_final_auditor_executed:
+            self.logger.info(f"  Step 8 - PlantUML LUCIM Final Auditor: {'✓' if plantuml_lucim_final_auditor_success else '✗'}")
         else:
-            self.logger.info(f"  Step 7 - PlantUML Messir Corrector: SKIPPED (diagrams already compliant)")
+            self.logger.info(f"  Step 7 - PlantUML LUCIM Corrector: SKIPPED (diagrams already compliant)")
     
     def log_error_details(self, results: Dict[str, Any]) -> None:
         """Log detailed error information for failed steps."""
@@ -225,30 +225,30 @@ class OrchestratorLogger:
         lucim_environment_success = results.get("lucim_environment_synthesizer", {}).get("data") is not None
         scenario_success = results.get("lucim_scenario_synthesizer", {}).get("data") is not None
         plantuml_writer_success = results.get("plantuml_writer", {}).get("data") is not None
-        plantuml_messir_auditor_success = results.get("plantuml_messir_auditor", {}).get("data") is not None
-        plantuml_messir_corrector_success = results.get("plantuml_messir_corrector", {}).get("data") is not None
-        plantuml_messir_final_auditor_success = results.get("plantuml_messir_final_auditor", {}).get("data") is not None
+        plantuml_lucim_auditor_success = results.get("plantuml_lucim_auditor", {}).get("data") is not None
+        plantuml_lucim_corrector_success = results.get("plantuml_lucim_corrector", {}).get("data") is not None
+        plantuml_lucim_final_auditor_success = results.get("plantuml_lucim_final_auditor", {}).get("data") is not None
         
         # Check if optional steps were executed
-        plantuml_messir_corrector_executed = "plantuml_messir_corrector" in results
-        plantuml_messir_final_auditor_executed = "plantuml_messir_final_auditor" in results
+        plantuml_lucim_corrector_executed = "plantuml_lucim_corrector" in results
+        plantuml_lucim_final_auditor_executed = "plantuml_lucim_final_auditor" in results
         
         self.logger.info(f"   Step 1 - Syntax Parser Agent: {'✓ SUCCESS' if netlogo_abstract_syntax_extractor_success else '✗ FAILED'}")
         self.logger.info(f"   Step 2 - NetLogo Behavior Extractor Agent: {'✓ SUCCESS' if behavior_extractor_success else '✗ FAILED'}")
         self.logger.info(f"   Step 3 - LUCIM Environment Synthesizer Agent: {'✓ SUCCESS' if lucim_environment_success else '✗ FAILED'}")
         self.logger.info(f"   Step 4 - Scenario Writer Agent: {'✓ SUCCESS' if scenario_success else '✗ FAILED'}")
         self.logger.info(f"   Step 5 - PlantUML Writer Agent: {'✓ SUCCESS' if plantuml_writer_success else '✗ FAILED'}")
-        self.logger.info(f"   Step 6 - PlantUML Messir Auditor Agent: {'✓ SUCCESS' if plantuml_messir_auditor_success else '✗ FAILED'}")
+        self.logger.info(f"   Step 6 - PlantUML LUCIM Auditor Agent: {'✓ SUCCESS' if plantuml_lucim_auditor_success else '✗ FAILED'}")
         
-        if not plantuml_messir_corrector_executed:
-            self.logger.info(f"   Step 7 - PlantUML Messir Corrector Agent: ⏭️  SKIPPED (diagrams already compliant)")
+        if not plantuml_lucim_corrector_executed:
+            self.logger.info(f"   Step 7 - PlantUML LUCIM Corrector Agent: ⏭️  SKIPPED (diagrams already compliant)")
         else:
-            self.logger.info(f"   Step 7 - PlantUML Messir Corrector Agent: {'✓ SUCCESS' if plantuml_messir_corrector_success else '✗ FAILED'}")
+            self.logger.info(f"   Step 7 - PlantUML LUCIM Corrector Agent: {'✓ SUCCESS' if plantuml_lucim_corrector_success else '✗ FAILED'}")
         
-        if not plantuml_messir_final_auditor_executed:
-            self.logger.info(f"   Step 8 - PlantUML Messir Final Auditor Agent: ⏭️  SKIPPED (corrector was skipped or not required)")
+        if not plantuml_lucim_final_auditor_executed:
+            self.logger.info(f"   Step 8 - PlantUML LUCIM Final Auditor Agent: ⏭️  SKIPPED (corrector was skipped or not required)")
         else:
-            self.logger.info(f"   Step 8 - PlantUML Messir Final Auditor Agent: {'✓ SUCCESS' if plantuml_messir_final_auditor_success else '✗ FAILED'}")
+            self.logger.info(f"   Step 8 - PlantUML LUCIM Final Auditor Agent: {'✓ SUCCESS' if plantuml_lucim_final_auditor_success else '✗ FAILED'}")
     
     def log_output_files(self, base_name: str, timestamp: str, model: str, results: Dict[str, Any]) -> None:
         """Log information about generated output files."""
@@ -262,24 +262,24 @@ class OrchestratorLogger:
                 elif agent_type == "behavior_extractor":
                     self.logger.info(f"   • NetLogo Behavior Extractor: {base_name}_{timestamp}_{model}_1b_behavior_extractor_v1_*.json/md")
                 elif agent_type == "lucim_environment_synthesizer":
-                    self.logger.info(f"   • LUCIM Environment Synthesizer: {base_name}_{timestamp}_{model}_2_messir_v1_*.json/md")
+                    self.logger.info(f"   • LUCIM Environment Synthesizer: {base_name}_{timestamp}_{model}_2_lucim_v1_*.json/md")
                 elif agent_type == "scenario_writer":
                     self.logger.info(f"   • Scenarios: {base_name}_{timestamp}_{model}_3_scenario_v1_*.md")
                 elif agent_type == "plantuml_writer":
                     self.logger.info(f"   • PlantUML Diagrams: {base_name}_{timestamp}_{model}_4_plantuml_*.json/md/.puml")
-                elif agent_type == "plantuml_messir_auditor":
-                    self.logger.info(f"   • PlantUML Messir Audit: {base_name}_{timestamp}_{model}_5_messir_audit_*.json/md/.puml")
-                elif agent_type == "plantuml_messir_corrector":
-                    self.logger.info(f"   • PlantUML Messir Corrector: {base_name}_{timestamp}_{model}_7_messir_corrector_*.json/md/.puml")
-                elif agent_type == "plantuml_messir_final_auditor":
-                    self.logger.info(f"   • PlantUML Messir Final Auditor: {base_name}_{timestamp}_{model}_8_messir_final_auditor_*.json/md/.puml")
+                elif agent_type == "plantuml_lucim_auditor":
+                    self.logger.info(f"   • PlantUML LUCIM Audit: {base_name}_{timestamp}_{model}_5_lucim_audit_*.json/md/.puml")
+                elif agent_type == "plantuml_lucim_corrector":
+                    self.logger.info(f"   • PlantUML LUCIM Corrector: {base_name}_{timestamp}_{model}_7_lucim_corrector_*.json/md/.puml")
+                elif agent_type == "plantuml_lucim_final_auditor":
+                    self.logger.info(f"   • PlantUML LUCIM Final Auditor: {base_name}_{timestamp}_{model}_8_lucim_final_auditor_*.json/md/.puml")
     
     def log_pipeline_completion(self, successful_agents: int, total_agents: int) -> None:
         """Log pipeline completion status."""
         self.logger.info(f"\n🎯 PIPELINE COMPLETION:")
         if successful_agents == total_agents:
             self.logger.info(f"   🎉 FULL SUCCESS: All {total_agents} agents completed successfully!")
-            self.logger.info(f"   📋 Final output includes Messir-compliant PlantUML sequence diagrams")
+            self.logger.info(f"   📋 Final output includes LUCIM-compliant PlantUML sequence diagrams")
         elif successful_agents >= 6:  # At least core pipeline completed (all 6 agents)
             self.logger.info(f"   ⚠️  PARTIAL SUCCESS: {successful_agents}/{total_agents} agents completed")
             self.logger.info(f"   📋 Some outputs available, but pipeline incomplete")
@@ -292,7 +292,7 @@ class OrchestratorLogger:
         self.logger.info(f"\n🔍 COMPLIANCE STATUS:")
         if final_compliance["status"] == "VERIFIED":
             self.logger.info(f"   ✅ FINAL COMPLIANCE: VERIFIED")
-            self.logger.info(f"   🎯 Result: Final audit confirms Messir compliance")
+            self.logger.info(f"   🎯 Result: Final audit confirms LUCIM compliance")
         elif final_compliance["status"] == "NON-COMPLIANT":
             self.logger.info(f"   ❌ FINAL COMPLIANCE: NON-COMPLIANT")
             self.logger.info(f"   📊 Result: One or more LUCIM rules were violated")

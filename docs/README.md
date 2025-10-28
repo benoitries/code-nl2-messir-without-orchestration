@@ -37,7 +37,7 @@ The agent performs the following logical steps internally:
 ## 📁 Project Structure
 
 ```
-code-nl2-messir-without-orchestration/
+code-netlogo-to-lucim-single-agent/
 ├── agent_netlogo_to_lucim.py              # Main conversion agent
 ├── utils_*.py                             # Utility functions
 ├── scripts/                               # Helper scripts for running the agent
@@ -61,7 +61,7 @@ code-nl2-messir-without-orchestration/
 1.  **Clone the repository:**
     ```bash
     git clone <repository-url>
-    cd code-nl2-messir-without-orchestration
+    cd code-netlogo-to-lucim-single-agent
     ```
 
 2.  **Install dependencies:**

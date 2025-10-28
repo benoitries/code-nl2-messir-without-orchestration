@@ -35,8 +35,8 @@ PERSONA_BEHAVIOR_EXTRACTOR = INPUT_PERSONA_DIR / DEFAULT_PERSONA_SET / "PSN_2_Ne
 PERSONA_LUCIM_ENVIRONMENT_SYNTHESIZER = INPUT_PERSONA_DIR / DEFAULT_PERSONA_SET / "PSN_3_LUCIMEnvironmentSynthesizer.md"
 PERSONA_LUCIM_SCENARIO_SYNTHESIZER = INPUT_PERSONA_DIR / DEFAULT_PERSONA_SET / "PSN_4_LUCIMScenarioSynthesizer.md"
 PERSONA_PLANTUML_WRITER = INPUT_PERSONA_DIR / DEFAULT_PERSONA_SET / "PSN_5_PlantUMLWriter.md"
-PERSONA_PLANTUML_AUDITOR = INPUT_PERSONA_DIR / DEFAULT_PERSONA_SET / "PSN_6_PlantUMLMessirAuditor.md"
-PERSONA_PLANTUML_CORRECTOR = INPUT_PERSONA_DIR / DEFAULT_PERSONA_SET / "PSN_7_PlantUMLMessirCorrector.md"
+PERSONA_PLANTUML_AUDITOR = INPUT_PERSONA_DIR / DEFAULT_PERSONA_SET / "PSN_6_PlantUMLLUCIMAuditor.md"
+PERSONA_PLANTUML_CORRECTOR = INPUT_PERSONA_DIR / DEFAULT_PERSONA_SET / "PSN_7_PlantUMLLUCIMCorrector.md"
 
 # Rules files (default to DEFAULT_PERSONA_SET)
 LUCIM_RULES_FILE = INPUT_PERSONA_DIR / DEFAULT_PERSONA_SET / "DSL_Target_LUCIM-full-definition-for-compliance.md"
@@ -266,9 +266,9 @@ def get_persona_file_paths(persona_set: str = DEFAULT_PERSONA_SET) -> Dict[str, 
         "lucim_environment_synthesizer": persona_dir / "PSN_3_LUCIMEnvironmentSynthesizer.md",
         "lucim_scenario_synthesizer": persona_dir / "PSN_4_LUCIMScenarioSynthesizer.md",
         "plantuml_writer": persona_dir / "PSN_5_PlantUMLWriter.md",
-        "plantuml_auditor": persona_dir / "PSN_6_PlantUMLMessirAuditor.md",
-        "plantuml_corrector": persona_dir / "PSN_7_PlantUMLMessirCorrector.md",
-        "messir_rules": persona_dir / "DSL_Target_LUCIM-full-definition-for-compliance.md",
+        "plantuml_auditor": persona_dir / "PSN_6_PlantUMLLUCIMAuditor.md",
+        "plantuml_corrector": persona_dir / "PSN_7_PlantUMLLUCIMCorrector.md",
+        "lucim_rules": persona_dir / "DSL_Target_LUCIM-full-definition-for-compliance.md",
         "dsl_il_syn_description": persona_dir / "DSL_IL_SYN-description.md",
         "dsl_il_syn_mapping": persona_dir / "DSL_IL_SYN-mapping.md",
         "dsl_il_sem_description": persona_dir / "DSL_IL_SEM-description.md",
@@ -282,7 +282,7 @@ def get_persona_file_path(persona_set: str, file_type: str) -> Path:
     
     Args:
         persona_set: Name of the persona set
-        file_type: Type of persona file (e.g., 'netlogo_abstract_syntax_extractor', 'messir_rules')
+        file_type: Type of persona file (e.g., 'netlogo_abstract_syntax_extractor', 'lucim_rules')
         
     Returns:
         Path to the requested persona file
