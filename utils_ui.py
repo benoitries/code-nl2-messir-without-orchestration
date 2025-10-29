@@ -124,21 +124,23 @@ def select_persona_set() -> str:
     
     if not available_persona_sets:
         print("No persona sets found.")
-        return "persona-v1"
+        return "persona-v2-after-ng-meeting"
 
     print("\nAvailable Persona Sets:")
     print("=" * 50)
     for i, persona_set in enumerate(available_persona_sets, 1):
         print(f"  {i}. {persona_set}")
     
-    print(f"Default: persona-v1 (press Enter to use default)")
+    # Prefer persona-v2-after-ng-meeting as default if available, otherwise fallback to persona-v1
+    default_persona = "persona-v2-after-ng-meeting" if "persona-v2-after-ng-meeting" in available_persona_sets else "persona-v1"
+    print(f"Default: {default_persona} (press Enter to use default)")
     
     while True:
         try:
             choice = input(f"Select persona set > ").strip()
             
             if not choice:
-                return "persona-v1"
+                return default_persona
             
             choice_num = int(choice)
             if 1 <= choice_num <= len(available_persona_sets):

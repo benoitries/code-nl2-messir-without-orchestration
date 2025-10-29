@@ -14,6 +14,16 @@ This project implements a single-step pipeline that transforms NetLogo simulatio
 - **Multiple AI Model Support**: Compatible with various large language models.
 - **Simplified Workflow**: Removes the complexity of a multi-agent orchestration pipeline.
 
+### Canonical system_prompt order
+The single agent follows the same canonical prompt construction order as the multi-agent pipeline:
+
+1) task_content
+2) persona
+3) agent-specific instructions (e.g., LUCIM rules)
+4) agent-specific inputs (e.g., NetLogo code, images, IL-SEM state machine, LUCIM concepts, scenarios, .puml)
+
+This order is reflected in the persisted `input-instructions.md` files under `output/<YYYY-MM-DD>/<HHMM>-<model>/`.
+
 ### Workflow Summary
 
 For a concise overview of the agent's workflow, see:
@@ -36,6 +46,8 @@ The agent performs the following logical steps internally:
 
 ## 📁 Project Structure
 
+Note: Persona directories under `input-persona/` are symbolic links to `experimentation/input/input-persona/`. The default persona set is `persona-v1`; you can change it at runtime via the interactive selection menu.
+
 ```
 code-netlogo-to-lucim-single-agent/
 ├── agent_netlogo_to_lucim.py              # Main conversion agent
@@ -43,9 +55,27 @@ code-netlogo-to-lucim-single-agent/
 ├── scripts/                               # Helper scripts for running the agent
 ├── requirements.txt                       # Python dependencies
 ├── input-netlogo/                         # NetLogo case studies
-├── input-persona/                         # AI agent personas and rules
-├── input-icrash/                          # Reference materials
-├── input-images/                          # Supporting images
+├── input-persona/                         # Persona sets (symlinks to experimentation/input)
+│   ├── persona-v1/
+│   │   ├── PSN_1_NetLogoAbstractSyntaxExtractor.md
+│   │   ├── PSN_2a_NetlogoInterfaceImageAnalyzer.md
+│   │   ├── PSN_2b_NetlogoBehaviorExtractor.md
+│   │   ├── PSN_3_LUCIMEnvironmentSynthesizer.md
+│   │   ├── PSN_4_LUCIMScenarioSynthesizer.md
+│   │   ├── PSN_5_PlantUMLWriter.md
+│   │   ├── PSN_6_PlantUMLLUCIMAuditor.md
+│   │   ├── PSN_7_PlantUMLLUCIMCorrector.md
+│   │   └── DSL_Target_LUCIM-full-definition-for-compliance.md
+│   └── persona-v2-after-ng-meeting/
+│       ├── PSN_1_NetLogoAbstractSyntaxExtractor.md
+│       ├── PSN_2a_NetlogoInterfaceImageAnalyzer.md
+│       ├── PSN_2b_NetlogoBehaviorExtractor.md
+│       ├── PSN_3_LUCIMEnvironmentSynthesizer.md
+│       ├── PSN_4_LUCIMScenarioSynthesizer.md
+│       ├── PSN_5_PlantUMLWriter.md
+│       ├── PSN_6_PlantUMLLUCIMAuditor.md
+│       ├── PSN_7_PlantUMLLUCIMCorrector.md
+│       └── DSL_Target_LUCIM-full-definition-for-compliance.md
 └── output/                                # Generated results
 ```
 

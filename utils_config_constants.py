@@ -21,7 +21,7 @@ BASE_DIR = pathlib.Path(__file__).resolve().parent
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # Default persona set
-DEFAULT_PERSONA_SET = "persona-v1"
+DEFAULT_PERSONA_SET = "persona-v2-after-ng-meeting"
 
 # Input directories - use environment variables if set, otherwise use default paths
 # Point to experimentation/input directories
@@ -36,7 +36,7 @@ LOG_DIR = OUTPUT_DIR / "logs"
 
 # Persona files (default to DEFAULT_PERSONA_SET)
 PERSONA_NETLOGO_ABSTRACT_SYNTAX_EXTRACTOR = INPUT_PERSONA_DIR / DEFAULT_PERSONA_SET / "PSN_1_NetLogoAbstractSyntaxExtractor.md"
-PERSONA_BEHAVIOR_EXTRACTOR = INPUT_PERSONA_DIR / DEFAULT_PERSONA_SET / "PSN_2_NetlogoBehaviorExtractor.md"
+PERSONA_BEHAVIOR_EXTRACTOR = INPUT_PERSONA_DIR / DEFAULT_PERSONA_SET / "PSN_2b_NetlogoBehaviorExtractor.md"
 PERSONA_LUCIM_ENVIRONMENT_SYNTHESIZER = INPUT_PERSONA_DIR / DEFAULT_PERSONA_SET / "PSN_3_LUCIMEnvironmentSynthesizer.md"
 PERSONA_LUCIM_SCENARIO_SYNTHESIZER = INPUT_PERSONA_DIR / DEFAULT_PERSONA_SET / "PSN_4_LUCIMScenarioSynthesizer.md"
 PERSONA_PLANTUML_WRITER = INPUT_PERSONA_DIR / DEFAULT_PERSONA_SET / "PSN_5_PlantUMLWriter.md"

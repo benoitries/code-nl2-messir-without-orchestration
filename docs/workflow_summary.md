@@ -22,7 +22,7 @@ This document summarizes the workflow of the single `agent_netlogo_to_lucim` age
     -   All persona files from `input-persona/<PERSONA_SET>/`.
     -   All DSL files (`DSL_IL_SYN`, `DSL_IL_SEM`) from `input-persona/<PERSONA_SET>/`.
     -   The full LUCIM compliance rules document (`DSL_Target_LUCIM-full-definition-for-compliance.md`).
-    -   Reference documents (e.g., iCrash PDFs).
+    -   Reference documents: removed (no iCrash PDFs).
     -   Configuration for the AI model, reasoning, and verbosity.
 
 -   **Instructions Source (no fallbacks):**
