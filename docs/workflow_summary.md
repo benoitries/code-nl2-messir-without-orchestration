@@ -7,7 +7,7 @@ This document summarizes the workflow of the single `agent_netlogo_to_lucim` age
 ## Pipeline Overview
 - **Agent**: `agent_netlogo_to_lucim.py`
 - **Process**: A single, end-to-end execution that takes NetLogo source files and produces a LUCIM-compliant PlantUML diagram.
-- **Output root**: `code-nl2-messir-without-orchestration/output/runs/<YYYY-MM-DD>/<HHMM>-<PERSONA_SET>/<case>-<model>/`
+- **Output root**: `code-nl2-messir-without-orchestration/output/runs/<YYYY-MM-DD>/<HHMM>-<PERSONA-SET>/<case>-<model>/`
 - **Artifacts**: The agent generates all intermediate and final artifacts in a single run, including AST, state machine, scenarios, diagrams, and audit reports.
 
 ---
@@ -19,8 +19,8 @@ This document summarizes the workflow of the single `agent_netlogo_to_lucim` age
 -   **Inputs**:
     -   NetLogo code file (`.md`).
     -   NetLogo interface screenshots (`.png`).
-    -   All persona files from `input-persona/<PERSONA_SET>/`.
-    -   All DSL files (`DSL_IL_SYN`, `DSL_IL_SEM`) from `input-persona/<PERSONA_SET>/`.
+    -   All persona files from `input-persona/<PERSONA-SET>/`.
+    -   All DSL files (`DSL_IL_SYN`, `DSL_IL_SEM`) from `input-persona/<PERSONA-SET>/`.
     -   The full LUCIM compliance rules document (`DSL_Target_LUCIM-full-definition-for-compliance.md`).
     -   Reference documents: removed (no iCrash PDFs).
     -   Configuration for the AI model, reasoning, and verbosity.

@@ -42,7 +42,7 @@ def get_run_base_dir(
     """Compute the base directory for a run combination.
 
     Args:
-        timestamp: Timestamp string formatted as YYYYMMDD_HHMM
+        timestamp: Timestamp string formatted as YYYYMMDD-HHMM
         case_name: Case identifier (base name)
         model_name: Model name (from AVAILABLE_MODELS)
         reasoning_effort: minimal|low|medium|high
@@ -51,13 +51,13 @@ def get_run_base_dir(
         output_dir: Override for OUTPUT_DIR mainly for testing
 
     Returns:
-        Path to: OUTPUT_DIR/runs/YYYY-MM-DD/HHMM-<PERSONA_SET_NAME>/<combination-folder>
+        Path to: OUTPUT_DIR/runs/YYYY-MM-DD/HHMM-<PERSONA-SET-NAME>/<combination-folder>
     """
     dt = datetime.strptime(timestamp_str, "%Y%m%d_%H%M%S")
     run_date = dt.strftime("%Y-%m-%d")
     run_time = dt.strftime("%H%M")
 
-    # New fine-grained path: output/runs/<YYYY-MM-DD>/<HHMM>-<PERSONA_SET>/<case>-<model>-reason-<effort>-verb-<verbosity>/
+    # New fine-grained path: output/runs/<YYYY-MM-DD>/<HHMM>-<PERSONA-SET>/<case>-<model>-reason-<effort>-verb-<verbosity>/
     run_dir = (
         OUTPUT_DIR
         / "runs"

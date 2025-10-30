@@ -298,12 +298,15 @@ def main():
     # 2) Stage 1 — Syntax Parser
     #    Persona → IL-SYN Description → IL-SYN Mapping → Case/Code/Images
     ordered_blocks.append(_safe_read(str(persona_paths.get("netlogo_abstract_syntax_extractor"))))
-    ordered_blocks.append(_safe_read(str(persona_paths.get("dsl_il_syn_description"))))
-    ordered_blocks.append(_safe_read(str(persona_paths.get("dsl_il_syn_mapping"))))
+    syn_desc = _safe_read(str(persona_paths.get("dsl_il_syn_description")))
+    if syn_desc:
+        ordered_blocks.append(f"<IL-SYN-DESCRIPTION>\n{syn_desc}\n</IL-SYN-DESCRIPTION>")
+    syn_map = _safe_read(str(persona_paths.get("dsl_il_syn_mapping")))
+    if syn_map:
+        ordered_blocks.append(f"<IL-SYN-MAPPING>\n{syn_map}\n</IL-SYN-MAPPING>")
 
     #    Inputs for stage 1
-    ordered_blocks.append(f"<CASE-STUDY-NAME>\n{selected_case}\n</CASE-STUDY-NAME>")
-    ordered_blocks.append(f"<NETLOGO-SOURCE-CODE>\n```text\n{netlogo_code_content}\n```\n</NETLOGO-SOURCE-CODE>")
+    ordered_blocks.append(f"<NETLOGO-SOURCE-CODE>\n{netlogo_code_content}\n</NETLOGO-SOURCE-CODE>")
     if "netlogo_images" in input_contents and input_contents["netlogo_images"]:
         ordered_blocks.append(
             f"<NETLOGO-INTERFACE-IMAGES>\ncount={len(input_contents['netlogo_images'])}\n</NETLOGO-INTERFACE-IMAGES>"
@@ -332,13 +335,19 @@ def main():
         ordered_blocks.append(persona_2b_text)
     else:
         ordered_blocks.append(_safe_read(str(persona_paths.get("behavior_extractor"))))
-    ordered_blocks.append(_safe_read(str(persona_paths.get("dsl_il_sem_description"))))
-    ordered_blocks.append(_safe_read(str(persona_paths.get("dsl_il_sem_mapping"))))
+    sem_desc = _safe_read(str(persona_paths.get("dsl_il_sem_description")))
+    if sem_desc:
+        ordered_blocks.append(f"<IL-SEM-DESCRIPTION>\n{sem_desc}\n</IL-SEM-DESCRIPTION>")
+    sem_map = _safe_read(str(persona_paths.get("dsl_il_sem_mapping")))
+    if sem_map:
+        ordered_blocks.append(f"<IL-SEM-MAPPING>\n{sem_map}\n</IL-SEM-MAPPING>")
 
     # 4) Stage 3 — LUCIM Environment Synthesizer
     #    Persona → LUCIM DSL (rules)
     ordered_blocks.append(_safe_read(str(persona_paths.get("lucim_environment_synthesizer"))))
-    ordered_blocks.append(_safe_read(str(persona_paths.get("lucim_rules"))))
+    lucim_rules = _safe_read(str(persona_paths.get("lucim_rules")))
+    if lucim_rules:
+        ordered_blocks.append(f"<LUCIM-RULES>\n{lucim_rules}\n</LUCIM-RULES>")
 
     # 5) Stage 4 — LUCIM Scenario Synthesizer (Persona)
     ordered_blocks.append(_safe_read(str(persona_paths.get("lucim_scenario_synthesizer"))))

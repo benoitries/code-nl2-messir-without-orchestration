@@ -63,7 +63,7 @@ def create_run_output_directory(run_name, case, model, persona_set, reasoning=No
     """Create the per-run output directory under the canonical runs/ hierarchy.
 
     Layout:
-      output/runs/<YYYY-MM-DD>/<HHMM>-<PERSONA_SET>/<case>-<model>-reason-<reasoning>-verb-<verbosity>/
+      output/runs/<YYYY-MM-DD>/<HHMM>-<PERSONA-SET>/<case>-<model>-reason-<reasoning>-verb-<verbosity>/
     """
     # Fallback defaults to keep behavior consistent if None is passed
     reasoning = reasoning or "medium"
