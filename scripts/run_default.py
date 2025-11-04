@@ -9,6 +9,8 @@ Launches the agent in non-interactive mode with default parameters.
 import os
 import subprocess
 import sys
+from pathlib import Path
+from dotenv import load_dotenv
 
 def main():
     """Sets up the environment and runs the agent with default settings."""
@@ -21,6 +23,17 @@ def main():
         print(f"Error: Agent script not found at {agent_script}")
         sys.exit(1)
         
+    # Load environment variables from possible .env locations before checking
+    code_dir = Path(project_root)
+    potential_env_paths = [
+        Path.cwd() / ".env",
+        code_dir / ".env",
+        code_dir.parent / ".env",
+    ]
+    for env_path in potential_env_paths:
+        if env_path.exists():
+            load_dotenv(env_path)
+
     # Check for OpenAI API key
     if "OPENAI_API_KEY" not in os.environ:
         print("Error: OPENAI_API_KEY environment variable is not set.")

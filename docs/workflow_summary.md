@@ -31,6 +31,7 @@ This document summarizes the workflow of the single `agent_netlogo_to_lucim` age
 
 -   **Outputs**:
     -   `output-response.json`: The raw structured response from the AI model.
+    -   Metrics visibility: the end-of-run OVERALL SUMMARY includes an “Auditor metrics (positive = compliant)” section when both the initial and final auditor outputs are present in the run directory. It reports TP, FP, TN, FN and derived metrics (Precision, Recall, Specificity, Accuracy, F1). If only one auditor output is available, a compact audit summary (verdict, non-compliant count, coverage) is shown.
     -   `output-reasoning.md`: The chain-of-thought reasoning from the agent.
     -   `output-data.json`: Contains structured data for various stages (e.g., AST, scenarios, audit results).
     -   `diagram.puml`: The final, LUCIM-compliant PlantUML diagram.

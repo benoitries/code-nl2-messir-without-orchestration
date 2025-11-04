@@ -78,6 +78,48 @@ class OrchestratorLogger:
                 lines.append(f"  • {a}")
         else:
             lines.append("Artifacts: none detected")
+        # Compliance metrics (if both initial and final audits are present among artifacts, or at least one)
+        try:
+            import os, json
+            final_path = os.path.join(output_dir, "plantuml_lucim_final_auditor_output.json")
+            initial_path = os.path.join(output_dir, "plantuml_lucim_auditor_output.json")
+            initial_data = None
+            final_data = None
+            if os.path.exists(initial_path):
+                with open(initial_path, "r", encoding="utf-8") as f:
+                    initial_data = json.load(f)
+            if os.path.exists(final_path):
+                with open(final_path, "r", encoding="utf-8") as f:
+                    final_data = json.load(f)
+
+            if final_data and initial_data:
+                from utils_metrics import compute_audit_confusion_metrics  # shared pattern across projects
+                metrics = compute_audit_confusion_metrics(initial_data, final_data, positive_label="compliant")
+                lines.append("")
+                lines.append("Auditor metrics (positive = compliant):")
+                lines.append(
+                    f"  • TP={metrics['tp']} FP={metrics['fp']} TN={metrics['tn']} FN={metrics['fn']} (universe={metrics['universe_size']})"
+                )
+                lines.append(
+                    "  • Precision={:.2%} Recall={:.2%} Specificity={:.2%} Accuracy={:.2%} F1={:.2%}".format(
+                        metrics["precision"], metrics["recall"], metrics["specificity"], metrics["accuracy"], metrics["f1"]
+                    )
+                )
+            elif final_data:
+                # Print simple counts when only one audit is present
+                data = final_data.get("data", {}) if isinstance(final_data, dict) else {}
+                ncr = data.get("non-compliant-rules", []) or []
+                lines.append("")
+                lines.append("Audit summary:")
+                lines.append(f"  • Verdict: {str(data.get('verdict', 'unknown')).upper()}")
+                lines.append(f"  • Non-compliant rules: {len(ncr)}")
+                cov = data.get("coverage", {}) if isinstance(data.get("coverage"), dict) else {}
+                lines.append(
+                    f"  • Coverage: total={cov.get('total_rules_in_dsl','?')} evaluated={len(cov.get('evaluated', []) or [])} n/a={len(cov.get('not_applicable', []) or [])}"
+                )
+        except Exception:
+            # Do not break summary on metrics extraction errors
+            pass
         lines.append("========================================================\n")
         return "\n".join(lines)
 
@@ -155,7 +197,7 @@ class OrchestratorLogger:
         # Determine success status for each step
         netlogo_abstract_syntax_extractor_success = results.get("ast", {}).get("data") is not None
         behavior_extractor_success = results.get("semantics", {}).get("data") is not None
-        lucim_environment_success = results.get("lucim_environment_synthesizer", {}).get("data") is not None
+        lucim_environment_success = results.get("lucim_operation_synthesizer", {}).get("data") is not None
         scenario_success = results.get("lucim_scenario_synthesizer", {}).get("data") is not None
         plantuml_writer_success = results.get("plantuml_writer", {}).get("data") is not None
         plantuml_lucim_auditor_success = results.get("plantuml_lucim_auditor", {}).get("data") is not None
@@ -169,7 +211,7 @@ class OrchestratorLogger:
         self.logger.info(f"{base_name} results:")
         self.logger.info(f"  Step 1 - Syntax Parser: {'✓' if netlogo_abstract_syntax_extractor_success else '✗'}")
         self.logger.info(f"  Step 2 - NetLogo Behavior Extractor: {'✓' if behavior_extractor_success else '✗'}")
-        self.logger.info(f"  Step 3 - LUCIM Environment Synthesizer: {'✓' if lucim_environment_success else '✗'}")
+        self.logger.info(f"  Step 3 - LUCIM Operation Synthesizer: {'✓' if lucim_environment_success else '✗'}")
         self.logger.info(f"  Step 4 - Scenario Writer: {'✓' if scenario_success else '✗'}")
         self.logger.info(f"  Step 5 - PlantUML Writer: {'✓' if plantuml_writer_success else '✗'}")
         self.logger.info(f"  Step 6 - PlantUML LUCIM Auditor: {'✓' if plantuml_lucim_auditor_success else '✗'}")
@@ -222,7 +264,7 @@ class OrchestratorLogger:
         # Determine status for each agent
         netlogo_abstract_syntax_extractor_success = results.get("ast", {}).get("data") is not None
         behavior_extractor_success = results.get("semantics", {}).get("data") is not None
-        lucim_environment_success = results.get("lucim_environment_synthesizer", {}).get("data") is not None
+        lucim_environment_success = results.get("lucim_operation_synthesizer", {}).get("data") is not None
         scenario_success = results.get("lucim_scenario_synthesizer", {}).get("data") is not None
         plantuml_writer_success = results.get("plantuml_writer", {}).get("data") is not None
         plantuml_lucim_auditor_success = results.get("plantuml_lucim_auditor", {}).get("data") is not None
@@ -235,7 +277,7 @@ class OrchestratorLogger:
         
         self.logger.info(f"   Step 1 - Syntax Parser Agent: {'✓ SUCCESS' if netlogo_abstract_syntax_extractor_success else '✗ FAILED'}")
         self.logger.info(f"   Step 2 - NetLogo Behavior Extractor Agent: {'✓ SUCCESS' if behavior_extractor_success else '✗ FAILED'}")
-        self.logger.info(f"   Step 3 - LUCIM Environment Synthesizer Agent: {'✓ SUCCESS' if lucim_environment_success else '✗ FAILED'}")
+        self.logger.info(f"   Step 3 - LUCIM Operation Synthesizer Agent: {'✓ SUCCESS' if lucim_environment_success else '✗ FAILED'}")
         self.logger.info(f"   Step 4 - Scenario Writer Agent: {'✓ SUCCESS' if scenario_success else '✗ FAILED'}")
         self.logger.info(f"   Step 5 - PlantUML Writer Agent: {'✓ SUCCESS' if plantuml_writer_success else '✗ FAILED'}")
         self.logger.info(f"   Step 6 - PlantUML LUCIM Auditor Agent: {'✓ SUCCESS' if plantuml_lucim_auditor_success else '✗ FAILED'}")
@@ -261,8 +303,8 @@ class OrchestratorLogger:
                     self.logger.info(f"   • Syntax Parser: {base_name}_{timestamp}_{model}_1a_netlogo_abstract_syntax_extractor_v1_*.md")
                 elif agent_type == "behavior_extractor":
                     self.logger.info(f"   • NetLogo Behavior Extractor: {base_name}_{timestamp}_{model}_1b_behavior_extractor_v1_*.json/md")
-                elif agent_type == "lucim_environment_synthesizer":
-                    self.logger.info(f"   • LUCIM Environment Synthesizer: {base_name}_{timestamp}_{model}_2_lucim_v1_*.json/md")
+                elif agent_type == "lucim_operation_synthesizer":
+                    self.logger.info(f"   • LUCIM Operation Synthesizer: {base_name}_{timestamp}_{model}_2_lucim_v1_*.json/md")
                 elif agent_type == "scenario_writer":
                     self.logger.info(f"   • Scenarios: {base_name}_{timestamp}_{model}_3_scenario_v1_*.md")
                 elif agent_type == "plantuml_writer":

@@ -379,3 +379,32 @@ def save_extracted_artifacts(output_dir: str, plantuml_text: Optional[str], audi
             logger.error(f"Failed to save audit report: {e}", exc_info=True)
     else:
         logger.info("No audit data to save; skipping audit.md creation")
+
+    # Persist machine-readable audit JSONs expected by analysis tools
+    try:
+        if audit_data:
+            # Always write final audit JSON
+            audit_final_path = os.path.join(output_dir, "audit_final.json")
+            write_json(audit_final_path, audit_data)
+            logger.info(f"Successfully wrote JSON audit to: {audit_final_path}")
+
+            # If no initial audit JSON exists yet, mirror the same data as initial
+            audit_initial_path = os.path.join(output_dir, "audit_initial.json")
+            if not os.path.exists(audit_initial_path):
+                write_json(audit_initial_path, audit_data)
+                logger.info(f"No initial audit found; mirrored final audit to: {audit_initial_path}")
+        else:
+            logger.info("No audit data to save as JSON; skipping audit_final.json / audit_initial.json")
+    except Exception as e:
+        logger.warning(f"Could not persist JSON audit artifacts: {e}")
+
+    # Provide baseline diagram variant when only a single diagram exists
+    try:
+        diagram_path = os.path.join(output_dir, "diagram.puml")
+        diagram_initial_path = os.path.join(output_dir, "diagram_initial.puml")
+        if os.path.exists(diagram_path) and not os.path.exists(diagram_initial_path):
+            content = read_file_content(diagram_path)
+            write_file_content(diagram_initial_path, content)
+            logger.info(f"Created baseline initial diagram: {diagram_initial_path}")
+    except Exception as e:
+        logger.warning(f"Could not create baseline initial diagram: {e}")
