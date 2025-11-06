@@ -46,7 +46,7 @@ The agent performs the following logical steps internally:
 
 ## 📁 Project Structure
 
-Note: Persona directories under `input-persona/` are symbolic links to `experimentation/input/input-persona/`. The default persona set is `persona-v1`; you can change it at runtime via the interactive selection menu.
+Note: Persona directories under `input-persona/` are symbolic links to `experimentation/input/input-persona/`. The default persona set is `persona-v3-limited-agents`; you can change it at runtime via the interactive selection menu.
 
 ```
 code-netlogo-to-lucim-single-agent/

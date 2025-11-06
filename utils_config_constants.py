@@ -5,7 +5,7 @@ Centralizes all file and directory path constants
 """
 
 import os
-from utils_api_key import get_openai_api_key
+from utils_api_key import get_api_key_for_model
 import pathlib
 from pathlib import Path
 from typing import Dict, Set
@@ -17,11 +17,10 @@ load_dotenv()
 # Base directory (parent of this file)
 BASE_DIR = pathlib.Path(__file__).resolve().parent
 
-# OpenAI API configuration
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+# API key will be selected dynamically based on the chosen model (set after DEFAULT_MODEL)
 
 # Default persona set
-DEFAULT_PERSONA_SET = "persona-v2-after-ng-meeting"
+DEFAULT_PERSONA_SET = "persona-v3-limited-agents"
 
 # Input directories - use environment variables if set, otherwise use default paths
 # Point to experimentation/input directories
@@ -35,36 +34,40 @@ OUTPUT_DIR = BASE_DIR / "output"
 LOG_DIR = OUTPUT_DIR / "logs"
 
 # Persona files (default to DEFAULT_PERSONA_SET)
-PERSONA_NETLOGO_ABSTRACT_SYNTAX_EXTRACTOR = INPUT_PERSONA_DIR / DEFAULT_PERSONA_SET / "PSN_1_NetLogoAbstractSyntaxExtractor.md"
-PERSONA_BEHAVIOR_EXTRACTOR = INPUT_PERSONA_DIR / DEFAULT_PERSONA_SET / "PSN_2b_NetlogoBehaviorExtractor.md"
-PERSONA_LUCIM_ENVIRONMENT_SYNTHESIZER = INPUT_PERSONA_DIR / DEFAULT_PERSONA_SET / "PSN_3_LUCIMEnvironmentSynthesizer.md"
-PERSONA_LUCIM_SCENARIO_SYNTHESIZER = INPUT_PERSONA_DIR / DEFAULT_PERSONA_SET / "PSN_4_LUCIMScenarioSynthesizer.md"
-PERSONA_PLANTUML_WRITER = INPUT_PERSONA_DIR / DEFAULT_PERSONA_SET / "PSN_5_PlantUMLWriter.md"
-PERSONA_PLANTUML_AUDITOR = INPUT_PERSONA_DIR / DEFAULT_PERSONA_SET / "PSN_6_PlantUMLLUCIMAuditor.md"
-PERSONA_PLANTUML_CORRECTOR = INPUT_PERSONA_DIR / DEFAULT_PERSONA_SET / "PSN_7_PlantUMLLUCIMCorrector.md"
+PERSONA_LUCIM_OPERATION_MODEL_GENERATOR = INPUT_PERSONA_DIR / DEFAULT_PERSONA_SET / "PSN_LUCIM_Operation_Model_Generator.md"
+PERSONA_LUCIM_OPERATION_MODEL_AUDITOR = INPUT_PERSONA_DIR / DEFAULT_PERSONA_SET / "PSN_LUCIM_Operation_Model_Auditor.md"
+PERSONA_LUCIM_SCENARIO_GENERATOR = INPUT_PERSONA_DIR / DEFAULT_PERSONA_SET / "PSN_LUCIM_Scenario_Generator.md"
+PERSONA_LUCIM_PLANTUML_DIAGRAM_GENERATOR = INPUT_PERSONA_DIR / DEFAULT_PERSONA_SET / "PSN_LUCIM_PlantUML_Diagram_Generator.md"
+PERSONA_LUCIM_PLANTUML_DIAGRAM_AUDITOR = INPUT_PERSONA_DIR / DEFAULT_PERSONA_SET / "PSN_LUCIM_PlantUML_Diagram_Auditor.md"
 
-# Rules files (default to DEFAULT_PERSONA_SET)
-LUCIM_RULES_FILE = INPUT_PERSONA_DIR / DEFAULT_PERSONA_SET / "DSL_Target_LUCIM-full-definition-for-compliance.md"
+# Additional LUCIM rules and mapping files (scoped to DEFAULT_PERSONA_SET)
+RULES_LUCIM_OPERATION_MODEL_FILE = INPUT_PERSONA_DIR / DEFAULT_PERSONA_SET / "RULES_LUCIM_Operation_model.md"
+RULES_LUCIM_SCENARIO_FILE = INPUT_PERSONA_DIR / DEFAULT_PERSONA_SET / "RULES_LUCIM_Scenario.md"
+RULES_LUCIM_PLANTUML_DIAGRAM_FILE = INPUT_PERSONA_DIR / DEFAULT_PERSONA_SET / "RULES_LUCIM_PlantUML_Diagram.md"
+RULES_MAPPING_NETLOGO_TO_OPERATION_MODEL_FILE = INPUT_PERSONA_DIR / DEFAULT_PERSONA_SET / "RULES_MAPPING_NETLOGO_TO_OPERATION_MODEL.md"
 
 # File patterns
 NETLOGO_CODE_PATTERN = "*-netlogo-code.md"
 NETLOGO_INTERFACE_PATTERN = "*-netlogo-interface-*.png"
 
-# Agent versions
-AGENT_VERSION_NETLOGO_ABSTRACT_SYNTAX_EXTRACTOR = "v5"
-AGENT_VERSION_SEMANTICS_PARSER = "v4"
-AGENT_VERSION_LUCIM_MAPPER = "v3"
-AGENT_VERSION_SCENARIO_WRITER = "v2"
-AGENT_VERSION_PLANTUML_WRITER = "v2"
-AGENT_VERSION_PLANTUML_AUDITOR = "v6"
-AGENT_VERSION_PLANTUML_CORRECTOR = "v2"
-
 # Available AI models (single source of truth)
 # Note: Only update model names here.
-AVAILABLE_MODELS = ["gpt-5-nano-2025-08-07","gpt-5-mini-2025-08-07","gpt-5-2025-08-07"]
+AVAILABLE_MODELS = [
+    "gpt-5-nano-2025-08-07",
+    "gpt-5-mini-2025-08-07",
+    "gpt-5-2025-08-07",
+    # Additional providers/models
+    "gemini-flash-latest",          # latest gemini flash
+    "gemini-2.5-pro",               # gemini 2.5 Pro
+    "mistral-reasoning-latest",     # most recent reasoning Mistral
+    "llama-reasoning-latest"        # most recent reasoning Llama
+]
 
 # Default model derived from AVAILABLE_MODELS
-DEFAULT_MODEL = AVAILABLE_MODELS[0] if AVAILABLE_MODELS else ""
+DEFAULT_MODEL = AVAILABLE_MODELS[1] if AVAILABLE_MODELS else ""
+
+# API key selected dynamically based on the default model/provider
+OPENAI_API_KEY = get_api_key_for_model(DEFAULT_MODEL) if DEFAULT_MODEL else ""
 
 # Agent-specific configurations
 # Each agent can be configured with:
@@ -73,45 +76,39 @@ DEFAULT_MODEL = AVAILABLE_MODELS[0] if AVAILABLE_MODELS else ""
 # - reasoning_summary: "auto" or "manual"
 # - text_verbosity: "low", "medium", or "high"
 AGENT_CONFIGS = {
-    "netlogo_abstract_syntax_extractor": {
-        "model": DEFAULT_MODEL,
-        "reasoning_effort": "medium",  # Increased for better parsing accuracy
-        "reasoning_summary": "auto",
-        "text_verbosity": "medium"
-    },
-    "behavior_extractor": {
-        "model": DEFAULT_MODEL,
-        "reasoning_effort": "medium",  # Increased for better semantic analysis
-        "reasoning_summary": "auto",
-        "text_verbosity": "medium"
-    },
-    "lucim_environment_synthesizer": {
+    "lucim_operation_model_generator": {
         "model": DEFAULT_MODEL,
         "reasoning_effort": "medium",
         "reasoning_summary": "auto",
         "text_verbosity": "medium"
     },
-    "lucim_scenario_synthesizer": {
+    "lucim_operation_model_auditor": {
         "model": DEFAULT_MODEL,
         "reasoning_effort": "medium",
         "reasoning_summary": "auto",
         "text_verbosity": "medium"
     },
-    "plantuml_writer": {
+    "lucim_scenario_generator": {
         "model": DEFAULT_MODEL,
         "reasoning_effort": "medium",
         "reasoning_summary": "auto",
         "text_verbosity": "medium"
     },
-    "plantuml_auditor": {
+    "lucim_scenario_auditor": {
+        "model": DEFAULT_MODEL,
+        "reasoning_effort": "medium",
+        "reasoning_summary": "auto",
+        "text_verbosity": "medium"
+    },
+    "lucim_plantuml_diagram_generator": {
+        "model": DEFAULT_MODEL,
+        "reasoning_effort": "medium",
+        "reasoning_summary": "auto",
+        "text_verbosity": "medium"
+    },
+    "lucim_plantuml_diagram_auditor": {
         "model": DEFAULT_MODEL,
         "reasoning_effort": "medium",  # Default medium for consistency
-        "reasoning_summary": "auto",
-        "text_verbosity": "medium"
-    },
-    "plantuml_corrector": {
-        "model": DEFAULT_MODEL,
-        "reasoning_effort": "medium",
         "reasoning_summary": "auto",
         "text_verbosity": "medium"
     }
@@ -121,14 +118,12 @@ AGENT_CONFIGS = {
 # Agent-level polling timeouts for OpenAI Responses API
 # Default: None (no timeout) for all agents; CLI can override via presets
 AGENT_TIMEOUTS = {
-    "netlogo_abstract_syntax_extractor": None,
-    "behavior_extractor": None,
-    "lucim_environment_synthesizer": None,
-    "lucim_scenario_synthesizer": None,
-    "plantuml_writer": None,
-    "plantuml_auditor": None,
-    "plantuml_corrector": None,
-    "plantuml_final_auditor": None,
+    "lucim_operation_model_generator": None,
+    "lucim_operation_model_auditor": None,
+    "lucim_scenario_generator": None,
+    "lucim_scenario_auditor": None,
+    "lucim_plantuml_diagram_generator": None,
+    "lucim_plantuml_diagram_auditor": None,
 }
 
 # Orchestrator watchdog for parallel first stage (syntax + semantics)
@@ -151,7 +146,7 @@ def ensure_directories():
 
 def get_agent_config(agent_name: str) -> dict:
     """Get the complete configuration for a specific agent"""
-    return AGENT_CONFIGS.get(agent_name, AGENT_CONFIGS["netlogo_abstract_syntax_extractor"])
+    return AGENT_CONFIGS.get(agent_name, AGENT_CONFIGS.get("lucim_operation_model_generator", {}))
 
 def get_reasoning_config(agent_name: str) -> dict:
     """Get the complete API configuration for an agent including reasoning, text and model"""
@@ -237,14 +232,12 @@ COMMON_KEYS = {
 OPTIONAL_KEYS = {"raw_response"}
 
 AGENT_KEYS: Dict[str, Set[str]] = {
-    "netlogo_abstract_syntax_extractor": COMMON_KEYS | OPTIONAL_KEYS,
-    "behavior_extractor": COMMON_KEYS | OPTIONAL_KEYS,
-    "lucim_environment_synthesizer": COMMON_KEYS | OPTIONAL_KEYS,
-    "lucim_scenario_synthesizer": COMMON_KEYS | OPTIONAL_KEYS,
-    "plantuml_writer": COMMON_KEYS | OPTIONAL_KEYS,
-    "plantuml_auditor": COMMON_KEYS | OPTIONAL_KEYS,
-    "plantuml_corrector": COMMON_KEYS | OPTIONAL_KEYS,
-    "plantuml_final_auditor": COMMON_KEYS | OPTIONAL_KEYS,
+    "lucim_operation_model_generator": COMMON_KEYS | OPTIONAL_KEYS,
+    "lucim_operation_model_auditor": COMMON_KEYS | OPTIONAL_KEYS,
+    "lucim_scenario_generator": COMMON_KEYS | OPTIONAL_KEYS,
+    "lucim_scenario_auditor": COMMON_KEYS | OPTIONAL_KEYS,
+    "lucim_plantuml_diagram_generator": COMMON_KEYS | OPTIONAL_KEYS,
+    "lucim_plantuml_diagram_auditor": COMMON_KEYS | OPTIONAL_KEYS,
 }
 
 
@@ -266,31 +259,11 @@ def get_persona_file_paths(persona_set: str = DEFAULT_PERSONA_SET) -> Dict[str, 
     persona_dir = INPUT_PERSONA_DIR / persona_set
     
     return {
-        "netlogo_abstract_syntax_extractor": persona_dir / "PSN_1_NetLogoAbstractSyntaxExtractor.md",
-        "behavior_extractor": persona_dir / "PSN_2_NetlogoBehaviorExtractor.md",
-        "lucim_environment_synthesizer": persona_dir / "PSN_3_LUCIMEnvironmentSynthesizer.md",
-        "lucim_scenario_synthesizer": persona_dir / "PSN_4_LUCIMScenarioSynthesizer.md",
-        "plantuml_writer": persona_dir / "PSN_5_PlantUMLWriter.md",
-        "plantuml_auditor": persona_dir / "PSN_6_PlantUMLLUCIMAuditor.md",
-        "plantuml_corrector": persona_dir / "PSN_7_PlantUMLLUCIMCorrector.md",
-        "lucim_rules": persona_dir / "DSL_Target_LUCIM-full-definition-for-compliance.md",
-        "dsl_il_syn_description": persona_dir / "DSL_IL_SYN-description.md",
-        "dsl_il_syn_mapping": persona_dir / "DSL_IL_SYN-mapping.md",
-        "dsl_il_sem_description": persona_dir / "DSL_IL_SEM-description.md",
-        "dsl_il_sem_mapping": persona_dir / "DSL_IL_SEM-mapping.md"
+        # v3 pipeline does not include legacy syntax/behavior agents
+        "lucim_operation_model_generator": persona_dir / "PSN_3_LUCIMEnvironmentSynthesizer.md",
+        "lucim_operation_model_auditor": persona_dir / "PSN_4_LUCIMScenarioSynthesizer.md",
+        "lucim_scenario_generator": persona_dir / "PSN_4_LUCIMScenarioSynthesizer.md",
+        "lucim_scenario_auditor": persona_dir / "PSN_5_PlantUMLWriter.md",
+        "lucim_plantuml_diagram_generator": persona_dir / "PSN_6_PlantUMLWriter.md",
+        "lucim_plantuml_diagram_auditor": persona_dir / "PSN_7_PlantUMLWriter.md",
     }
-
-
-def get_persona_file_path(persona_set: str, file_type: str) -> Path:
-    """
-    Get a specific persona file path for a persona set.
-    
-    Args:
-        persona_set: Name of the persona set
-        file_type: Type of persona file (e.g., 'netlogo_abstract_syntax_extractor', 'lucim_rules')
-        
-    Returns:
-        Path to the requested persona file
-    """
-    persona_paths = get_persona_file_paths(persona_set)
-    return persona_paths.get(file_type, Path())

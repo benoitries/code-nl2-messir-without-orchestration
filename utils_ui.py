@@ -63,6 +63,9 @@ def select_model() -> str:
         except ValueError:
             print("Error: Please enter a valid number or press Enter.")
 
+_last_reasoning_effort: str = ""  # track last selection to link default verbosity
+
+
 def select_reasoning_effort() -> str:
     """Handle reasoning effort selection UI."""
     options = ["minimal", "low", "medium", "high"]
@@ -75,11 +78,15 @@ def select_reasoning_effort() -> str:
     while True:
         user_input = input("Reasoning effort > ").strip()
         if user_input == "":
+            global _last_reasoning_effort
+            _last_reasoning_effort = "medium"
             return "medium"
         try:
             choice = int(user_input)
             if 1 <= choice <= len(options):
-                return options[choice - 1]
+                selected = options[choice - 1]
+                _last_reasoning_effort = selected
+                return selected
             else:
                 print(f"Error: Invalid choice. Options: 1-{len(options)}")
         except ValueError:
@@ -92,11 +99,24 @@ def select_text_verbosity() -> str:
     print("="*50)
     for i, verbosity in enumerate(options, 1):
         print(f"{i}. {verbosity.title()}")
-    print("Enter choice (press Enter for default 'medium'):")
+    # Determine linked default based on last reasoning selection
+    linked_default = None
+    if _last_reasoning_effort in ("minimal", "low"):
+        linked_default = "low"
+    elif _last_reasoning_effort == "medium":
+        linked_default = "medium"
+    elif _last_reasoning_effort == "high":
+        linked_default = "high"
+    if linked_default:
+        print(f"Press Enter for default linked to reasoning ('{linked_default}'):")
+    else:
+        print("Enter choice (press Enter for default 'medium'):")
 
     while True:
         user_input = input("Text verbosity > ").strip()
         if user_input == "":
+            if linked_default:
+                return linked_default
             return "medium"
         try:
             choice = int(user_input)

@@ -87,15 +87,10 @@ def main():
     # Ensure all necessary directories exist before proceeding
     cfg.ensure_directories()
 
-    # Validate OpenAI API key before doing anything else using robust validation
-    try:
-        from utils_api_key import validate_openai_key
-        if not validate_openai_key():
-            sys.exit(1)
-    except ImportError:
-        # Fallback to old validation
-        if not openai_client.validate_openai_key():
-            sys.exit(1)
+    # Validate API key based on selected model before doing anything else
+    # Note: selected_model is determined later, so we'll validate after model selection
+    # But we keep the structure here for backward compatibility
+    api_key_validated = False
 
     parser = argparse.ArgumentParser(description="Run the NetLogo to LUCIM conversion agent.")
     parser.add_argument("--case", type=str, help="The NetLogo case study to process.")
@@ -158,6 +153,17 @@ def main():
     logger.info(f"Selected Model: {selected_model}")
     logger.info(f"Selected Reasoning: {selected_reasoning}")
     logger.info(f"Selected Verbosity: {selected_verbosity}")
+
+    # Check API key presence for the selected model (no validation)
+    try:
+        from utils_api_key import get_provider_for_model, get_api_key_for_model
+        provider = get_provider_for_model(selected_model)
+        logger.info(f"Detected provider: {provider} for model: {selected_model}")
+        _ = get_api_key_for_model(selected_model)
+        logger.info(f"✓ API key found for provider: {provider}")
+    except Exception as e:
+        logger.error(f"Missing API key for selected model/provider: {e}", exc_info=True)
+        sys.exit(1)
 
     # --- 1. Create Output Directory ---
     output_dir = fileio.create_run_output_directory(
@@ -342,21 +348,21 @@ def main():
     if sem_map:
         ordered_blocks.append(f"<IL-SEM-MAPPING>\n{sem_map}\n</IL-SEM-MAPPING>")
 
-    # 4) Stage 3 — LUCIM Environment Synthesizer
+    # 4) Stage 3 — LUCIM Environment Generator
     #    Persona → LUCIM DSL (rules)
-    ordered_blocks.append(_safe_read(str(persona_paths.get("lucim_environment_synthesizer"))))
+    ordered_blocks.append(_safe_read(str(persona_paths.get("lucim_environment_generator"))))
     lucim_rules = _safe_read(str(persona_paths.get("lucim_rules")))
     if lucim_rules:
         ordered_blocks.append(f"<LUCIM-RULES>\n{lucim_rules}\n</LUCIM-RULES>")
 
-    # 5) Stage 4 — LUCIM Scenario Synthesizer (Persona)
-    ordered_blocks.append(_safe_read(str(persona_paths.get("lucim_scenario_synthesizer"))))
+    # 5) Stage 4 — LUCIM Scenario Generator (Persona)
+    ordered_blocks.append(_safe_read(str(persona_paths.get("lucim_scenario_generator"))))
 
     # 6) Stage 5 — PlantUML Writer (Persona)
-    ordered_blocks.append(_safe_read(str(persona_paths.get("plantuml_writer"))))
+    ordered_blocks.append(_safe_read(str(persona_paths.get("lucim_plantuml_diagram_generator"))))
 
     # 7) Stage 6 — PlantUML Auditor (Persona)
-    ordered_blocks.append(_safe_read(str(persona_paths.get("plantuml_auditor"))))
+    ordered_blocks.append(_safe_read(str(persona_paths.get("lucim_plantuml_diagram_auditor"))))
 
     # 8) Stage 7 — PlantUML Corrector (Persona)
     ordered_blocks.append(_safe_read(str(persona_paths.get("plantuml_corrector"))))
@@ -374,7 +380,51 @@ def main():
     run_start = time.time()
     logger.info(f"Sending request to AI model: {selected_model}...")
     try:
-        client = openai_client.OpenAI()
+        from utils_api_key import get_provider_for_model, create_openai_client, get_gemini_api_key
+        from utils_openai_client import get_openai_client
+        
+        provider = get_provider_for_model(selected_model)
+        
+        # Detect specific model families for better error messages
+        model_lower = selected_model.lower()
+        is_mistral = "mistral" in model_lower
+        is_llama = "llama" in model_lower
+        
+        if provider == "gemini":
+            # For Gemini models, we need to use Google's API
+            # Note: The single agent currently only supports OpenAI Responses API
+            # This is a limitation that should be addressed in a future update
+            logger.error(
+                f"Gemini models are not yet fully supported in the single agent. "
+                f"Please use the orchestrator with ADK (orchestrator_persona_v3_adk.py) "
+                f"for Gemini model support, or use an OpenAI model instead."
+            )
+            raise ValueError(
+                f"Gemini provider detected but single agent only supports OpenAI Responses API. "
+                f"Model: {selected_model}, Provider: {provider}"
+            )
+        elif provider == "router":
+            # For OpenRouter models (Mistral, Llama, etc.), we need to use OpenRouter API
+            model_type = ""
+            if is_mistral:
+                model_type = "Mistral"
+            elif is_llama:
+                model_type = "Llama"
+            else:
+                model_type = "OpenRouter"
+            
+            logger.error(
+                f"{model_type} models (via OpenRouter) are not yet fully supported in the single agent. "
+                f"Please use the orchestrator with ADK (orchestrator_persona_v3_adk.py) "
+                f"for {model_type} model support, or use an OpenAI model instead."
+            )
+            raise ValueError(
+                f"OpenRouter provider detected ({model_type} model) but single agent only supports OpenAI Responses API. "
+                f"Model: {selected_model}, Provider: {provider}"
+            )
+        else:
+            # OpenAI provider - use standard OpenAI client
+            client = get_openai_client()
 
         # Define API configuration for the Responses API
         api_config = {
