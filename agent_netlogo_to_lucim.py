@@ -148,6 +148,7 @@ def main():
     )
 
     logger.info(f"--- Starting Agent Run: {run_name} ---")
+    logger.info(f"=== SINGLE-CALL MODE: v3 ADK Compatible ===")
     logger.info(f"Selected Case: {selected_case}")
     logger.info(f"Selected Persona Set: {selected_persona_set}")
     logger.info(f"Selected Model: {selected_model}")
@@ -215,7 +216,10 @@ def main():
         sys.exit(1)
 
     # --- 2. Build the complete system prompt ---
-    logger.info("Building the complete system prompt for the AI model...")
+    # SINGLE-CALL MODE: Build v3 ADK-compatible composite prompt
+    logger.info("Building v3 ADK-compatible composite prompt for single-call mode...")
+    logger.info("=== SINGLE-CALL MODE ENABLED ===")
+    
     if not task_instructions or not str(task_instructions).strip():
         logger.error("Mandatory TASK instructions are missing. Expected file at input-task/single-agent-task. Aborting.")
         sys.exit(2)
@@ -292,85 +296,101 @@ def main():
 
         return updated
 
-    # Resolve canonical persona/DSL paths
-    persona_paths = cfg.get_persona_file_paths(selected_persona_set)
+    # Build v3 ADK-compatible composite prompt for single-call mode
+    def _build_v3_adk_composite_prompt():
+        """Build a composite prompt that requests all 3 stages in a single LLM call."""
+        ordered_blocks = []
+        
+        # Load v3 ADK personas and rules
+        persona_dir = cfg.INPUT_PERSONA_DIR / selected_persona_set
+        
+        # Stage 1: LUCIM Operation Model Generator
+        persona_op_model = _safe_read(str(persona_dir / "PSN_LUCIM_Operation_Model_Generator.md"))
+        if persona_op_model:
+            ordered_blocks.append("=== STAGE 1: LUCIM OPERATION MODEL GENERATION ===")
+            ordered_blocks.append(persona_op_model)
+        
+        # Load NetLogo to LUCIM mapping
+        mapping_file = persona_dir / "RULES_MAPPING_NETLOGO_TO_OPERATION_MODEL.md"
+        netlogo_mapping = _safe_read(str(mapping_file))
+        if netlogo_mapping:
+            ordered_blocks.append(f"<NETLOGO-TO-LUCIM-MAPPING>\n{netlogo_mapping}\n</NETLOGO-TO-LUCIM-MAPPING>")
+        
+        # Load LUCIM Operation Model rules
+        rules_op_model = _safe_read(str(persona_dir / "RULES_LUCIM_Operation_model.md"))
+        if rules_op_model:
+            ordered_blocks.append(f"<LUCIM-OPERATION-MODEL-RULES>\n{rules_op_model}\n</LUCIM-OPERATION-MODEL-RULES>")
+        
+        # Stage 2: LUCIM Scenario Generator
+        persona_scenario = _safe_read(str(persona_dir / "PSN_LUCIM_Scenario_Generator.md"))
+        if persona_scenario:
+            ordered_blocks.append("\n=== STAGE 2: LUCIM SCENARIO GENERATION ===")
+            ordered_blocks.append(persona_scenario)
+        
+        # Load Scenario rules
+        rules_scenario = _safe_read(str(persona_dir / "RULES_LUCIM_Scenario.md"))
+        if rules_scenario:
+            ordered_blocks.append(f"<LUCIM-SCENARIO-RULES>\n{rules_scenario}\n</LUCIM-SCENARIO-RULES>")
+        
+        # Stage 3: LUCIM PlantUML Diagram Generator
+        persona_plantuml = _safe_read(str(persona_dir / "PSN_LUCIM_PlantUML_Diagram_Generator.md"))
+        if persona_plantuml:
+            ordered_blocks.append("\n=== STAGE 3: LUCIM PLANTUML DIAGRAM GENERATION ===")
+            ordered_blocks.append(persona_plantuml)
+        
+        # Load PlantUML Diagram rules
+        rules_plantuml = _safe_read(str(persona_dir / "RULES_LUCIM_PlantUML_Diagram.md"))
+        if rules_plantuml:
+            ordered_blocks.append(f"<LUCIM-PLANTUML-DIAGRAM-RULES>\n{rules_plantuml}\n</LUCIM-PLANTUML-DIAGRAM-RULES>")
+        
+        # Add NetLogo source code
+        ordered_blocks.append(f"\n<NETLOGO-SOURCE-CODE>\n{netlogo_code_content}\n</NETLOGO-SOURCE-CODE>")
+        if "netlogo_images" in input_contents and input_contents["netlogo_images"]:
+            ordered_blocks.append(
+                f"<NETLOGO-INTERFACE-IMAGES>\ncount={len(input_contents['netlogo_images'])}\n</NETLOGO-INTERFACE-IMAGES>"
+            )
+        
+        # Add output format instructions for structured response
+        output_format = """
+=== OUTPUT FORMAT REQUIREMENTS ===
 
-    ordered_blocks = []
+You must produce a single JSON response with the following structure:
 
-    # 1) TASK (mandatory) with dynamic per-stage Task injections
-    injected_task_instructions = _inject_stage_tasks_into_task_instructions(str(task_instructions))
-    ordered_blocks.append(injected_task_instructions.strip())
+{
+  "operation_model": {
+    "data": <LUCIM Operation Model JSON object>,
+    "errors": []
+  },
+  "scenario": {
+    "data": {
+      "scenario": {
+        "name": "<scenario name>",
+        "description": "<scenario description>",
+        "messages": [<array of scenario messages>]
+      }
+    },
+    "errors": []
+  },
+  "plantuml_diagram": {
+    "data": {
+      "plantuml-diagram": "<PlantUML diagram text between @startuml and @enduml>"
+    },
+    "errors": []
+  }
+}
 
-    # 2) Stage 1 — Syntax Parser
-    #    Persona → IL-SYN Description → IL-SYN Mapping → Case/Code/Images
-    ordered_blocks.append(_safe_read(str(persona_paths.get("netlogo_abstract_syntax_extractor"))))
-    syn_desc = _safe_read(str(persona_paths.get("dsl_il_syn_description")))
-    if syn_desc:
-        ordered_blocks.append(f"<IL-SYN-DESCRIPTION>\n{syn_desc}\n</IL-SYN-DESCRIPTION>")
-    syn_map = _safe_read(str(persona_paths.get("dsl_il_syn_mapping")))
-    if syn_map:
-        ordered_blocks.append(f"<IL-SYN-MAPPING>\n{syn_map}\n</IL-SYN-MAPPING>")
-
-    #    Inputs for stage 1
-    ordered_blocks.append(f"<NETLOGO-SOURCE-CODE>\n{netlogo_code_content}\n</NETLOGO-SOURCE-CODE>")
-    if "netlogo_images" in input_contents and input_contents["netlogo_images"]:
-        ordered_blocks.append(
-            f"<NETLOGO-INTERFACE-IMAGES>\ncount={len(input_contents['netlogo_images'])}\n</NETLOGO-INTERFACE-IMAGES>"
-        )
-
-    # 2a) Interface Image Analyzer — add persona 2a and task step-2a
-    persona_2a_path = os.path.join(cfg.INPUT_PERSONA_DIR, selected_persona_set, "PSN_2a_NetlogoInterfaceImageAnalyzer.md")
-    persona_2a_text = _safe_read(persona_2a_path)
-    step_2a_task = _load_step_2a_task()
-    if persona_2a_text or step_2a_task:
-        stage_2a_blocks = []
-        # Stage header for clarity in the prompt
-        stage_2a_blocks.append("2a) NetLogo Interface Image Analyzer")
-        if step_2a_task:
-            stage_2a_blocks.append(f"- Task: {step_2a_task}")
-        if persona_2a_text:
-            stage_2a_blocks.append(persona_2a_text)
-        ordered_blocks.append("\n".join(stage_2a_blocks))
-
-    # 3) Stage 2 — Semantics Parser
-    #    Persona → IL-SEM Description → IL-SEM Mapping
-    # Prefer PSN_2b if present; otherwise fallback to existing mapping
-    persona_2b_path = os.path.join(cfg.INPUT_PERSONA_DIR, selected_persona_set, "PSN_2b_NetlogoBehaviorExtractor.md")
-    persona_2b_text = _safe_read(persona_2b_path)
-    if persona_2b_text:
-        ordered_blocks.append(persona_2b_text)
-    else:
-        ordered_blocks.append(_safe_read(str(persona_paths.get("behavior_extractor"))))
-    sem_desc = _safe_read(str(persona_paths.get("dsl_il_sem_description")))
-    if sem_desc:
-        ordered_blocks.append(f"<IL-SEM-DESCRIPTION>\n{sem_desc}\n</IL-SEM-DESCRIPTION>")
-    sem_map = _safe_read(str(persona_paths.get("dsl_il_sem_mapping")))
-    if sem_map:
-        ordered_blocks.append(f"<IL-SEM-MAPPING>\n{sem_map}\n</IL-SEM-MAPPING>")
-
-    # 4) Stage 3 — LUCIM Environment Generator
-    #    Persona → LUCIM DSL (rules)
-    ordered_blocks.append(_safe_read(str(persona_paths.get("lucim_environment_generator"))))
-    lucim_rules = _safe_read(str(persona_paths.get("lucim_rules")))
-    if lucim_rules:
-        ordered_blocks.append(f"<LUCIM-RULES>\n{lucim_rules}\n</LUCIM-RULES>")
-
-    # 5) Stage 4 — LUCIM Scenario Generator (Persona)
-    ordered_blocks.append(_safe_read(str(persona_paths.get("lucim_scenario_generator"))))
-
-    # 6) Stage 5 — PlantUML Writer (Persona)
-    ordered_blocks.append(_safe_read(str(persona_paths.get("lucim_plantuml_diagram_generator"))))
-
-    # 7) Stage 6 — PlantUML Auditor (Persona)
-    ordered_blocks.append(_safe_read(str(persona_paths.get("lucim_plantuml_diagram_auditor"))))
-
-    # 8) Stage 7 — PlantUML Corrector (Persona)
-    ordered_blocks.append(_safe_read(str(persona_paths.get("plantuml_corrector"))))
-
-    # Note: Stage 8 reuses the auditor; we do not duplicate content.
-
-    # Create single system_prompt variable for both API call and file generation
-    system_prompt = "\n\n".join([b for b in ordered_blocks if b and str(b).strip()])
+CRITICAL: 
+- The operation_model.data must be a valid JSON object (no Markdown fences, no text outside JSON)
+- The scenario.data must follow the LUCIM Scenario JSON format
+- The plantuml_diagram.data["plantuml-diagram"] must contain the complete PlantUML diagram text (including @startuml and @enduml markers, no Markdown fences)
+- All three stages must be completed in this single response
+"""
+        ordered_blocks.append(output_format)
+        
+        return "\n\n".join([b for b in ordered_blocks if b and str(b).strip()])
+    
+    # Build the composite prompt
+    system_prompt = _build_v3_adk_composite_prompt()
 
     # Write input-instructions.md BEFORE API call for debugging
     fileio.write_input_instructions_before_api(output_dir, system_prompt)
@@ -439,39 +459,252 @@ def main():
         # Log token usage
         usage = openai_client.get_usage_tokens(response)
         logger.info(
-            f"API call successful. Token usage: "
+            f"Single-call API completed successfully. Token usage: "
             f"Input: {usage['input_tokens']}, Output: {usage['output_tokens']}, Total: {usage['total_tokens']}"
         )
+        logger.info(f"Single-call mode: Exactly 1 LLM call performed for all 3 stages")
 
     except Exception as e:
         logger.error(f"API call failed: {e}", exc_info=True)
         sys.exit(1)
 
-    # --- 4. Process and save the output artifacts ---
-    logger.info("Processing and saving output artifacts...")
+    # --- 4. Process and save the output artifacts (SINGLE-CALL MODE) ---
+    logger.info("Processing single-call response and extracting 3-stage artifacts...")
     try:
+        import json
+        from pathlib import Path
+        
         # Save the raw API response
         raw_response_dict = response.to_dict()
         fileio.write_json(os.path.join(output_dir, "raw_response.json"), raw_response_dict)
-
-        # Extract PlantUML and audit from raw_response.json
-        logger.info("Extracting PlantUML diagram and audit report from response...")
-        plantuml_text = fileio.extract_plantuml_from_response(raw_response_dict, output_dir, logger)
-        audit_data = fileio.extract_audit_from_response(raw_response_dict, output_dir, logger)
         
-        # Save extracted artifacts
-        fileio.save_extracted_artifacts(output_dir, plantuml_text, audit_data, logger)
-
         # Extract and save the main text content
         output_text = openai_client.get_output_text(response)
         if output_text:
             fileio.write_file_content(os.path.join(output_dir, "output_full_text.md"), output_text)
             logger.info("Saved full text output.")
-
-            # Parse and save individual artifacts
-            parse_and_save_artifacts(output_text, output_dir, logger)
-        else:
-            logger.warning("No text output found in the API response.")
+        
+        # Parse the structured JSON response to extract 3 artifacts
+        def _parse_single_call_response(response_text: str) -> dict:
+            """Parse the single-call response to extract operation model, scenario, and PlantUML."""
+            artifacts = {
+                "operation_model": None,
+                "scenario": None,
+                "plantuml_diagram": None
+            }
+            
+            if not response_text or not isinstance(response_text, str):
+                logger.error("Response text is empty or invalid")
+                return artifacts
+            
+            try:
+                # Try to parse as JSON first
+                # Look for JSON block in the response (handle markdown code fences)
+                json_text = response_text
+                
+                # Remove markdown code fences if present
+                if "```json" in json_text:
+                    start = json_text.find("```json") + 7
+                    end = json_text.find("```", start)
+                    if end > start:
+                        json_text = json_text[start:end].strip()
+                elif "```" in json_text:
+                    start = json_text.find("```") + 3
+                    end = json_text.find("```", start)
+                    if end > start:
+                        json_text = json_text[start:end].strip()
+                
+                # Find JSON boundaries
+                json_start = json_text.find("{")
+                json_end = json_text.rfind("}") + 1
+                
+                if json_start >= 0 and json_end > json_start:
+                    json_content = json_text[json_start:json_end]
+                    parsed = json.loads(json_content)
+                    
+                    # Schema validation: check for required top-level keys
+                    required_keys = ["operation_model", "scenario", "plantuml_diagram"]
+                    missing_keys = [k for k in required_keys if k not in parsed]
+                    if missing_keys:
+                        logger.warning(f"Missing required keys in response: {missing_keys}")
+                    
+                    # Extract operation model with schema guard
+                    if "operation_model" in parsed:
+                        op_model = parsed["operation_model"]
+                        if isinstance(op_model, dict) and "data" in op_model:
+                            artifacts["operation_model"] = op_model
+                        else:
+                            logger.warning("operation_model missing 'data' key or invalid structure")
+                    
+                    # Extract scenario with schema guard
+                    if "scenario" in parsed:
+                        scenario = parsed["scenario"]
+                        if isinstance(scenario, dict) and "data" in scenario:
+                            artifacts["scenario"] = scenario
+                        else:
+                            logger.warning("scenario missing 'data' key or invalid structure")
+                    
+                    # Extract PlantUML diagram with schema guard
+                    if "plantuml_diagram" in parsed:
+                        puml = parsed["plantuml_diagram"]
+                        if isinstance(puml, dict) and "data" in puml:
+                            puml_data = puml["data"]
+                            if isinstance(puml_data, dict) and "plantuml-diagram" in puml_data:
+                                artifacts["plantuml_diagram"] = puml
+                            else:
+                                logger.warning("plantuml_diagram.data missing 'plantuml-diagram' key")
+                        else:
+                            logger.warning("plantuml_diagram missing 'data' key or invalid structure")
+                    
+                    logger.info("Successfully parsed structured JSON response with schema validation.")
+                    return artifacts
+            except (json.JSONDecodeError, KeyError, ValueError) as e:
+                logger.warning(f"Failed to parse structured JSON response: {e}")
+            
+            # Fallback: try to extract from text patterns
+            logger.info("Attempting fallback extraction from text patterns...")
+            
+            # Try to extract PlantUML (look for @startuml...@enduml)
+            plantuml_start = response_text.find("@startuml")
+            plantuml_end = response_text.find("@enduml")
+            if plantuml_start >= 0 and plantuml_end > plantuml_start:
+                plantuml_text = response_text[plantuml_start:plantuml_end + len("@enduml")]
+                artifacts["plantuml_diagram"] = {
+                    "data": {"plantuml-diagram": plantuml_text},
+                    "errors": []
+                }
+                logger.info("Extracted PlantUML diagram from text patterns.")
+            
+            return artifacts
+        
+        # Parse the response
+        parsed_artifacts = _parse_single_call_response(output_text if output_text else "")
+        
+        # Create stage directories (matching v3 ADK structure)
+        stage1_dir = os.path.join(output_dir, "1_lucim_operation_model", "iter-1", "1-generator")
+        stage2_dir = os.path.join(output_dir, "2_lucim_scenario", "iter-1", "1-generator")
+        stage3_dir = os.path.join(output_dir, "3_lucim_plantuml_diagram", "iter-1", "1-generator")
+        
+        os.makedirs(stage1_dir, exist_ok=True)
+        os.makedirs(stage2_dir, exist_ok=True)
+        os.makedirs(stage3_dir, exist_ok=True)
+        
+        # Save Stage 1: Operation Model
+        if parsed_artifacts["operation_model"]:
+            op_model_data = parsed_artifacts["operation_model"].get("data")
+            if op_model_data:
+                # Save as JSON (raw text content)
+                if isinstance(op_model_data, dict):
+                    op_model_text = json.dumps(op_model_data, indent=2, ensure_ascii=False)
+                else:
+                    op_model_text = str(op_model_data)
+                fileio.write_file_content(os.path.join(stage1_dir, "output-data.json"), op_model_text)
+                logger.info("Saved operation model to Stage 1 directory.")
+        
+        # Save Stage 2: Scenario
+        if parsed_artifacts["scenario"]:
+            scenario_data = parsed_artifacts["scenario"].get("data")
+            if scenario_data:
+                # Save as JSON (raw text content)
+                if isinstance(scenario_data, dict):
+                    scenario_text = json.dumps(scenario_data, indent=2, ensure_ascii=False)
+                else:
+                    scenario_text = str(scenario_data)
+                fileio.write_file_content(os.path.join(stage2_dir, "output-data.json"), scenario_text)
+                logger.info("Saved scenario to Stage 2 directory.")
+        
+        # Save Stage 3: PlantUML Diagram
+        if parsed_artifacts["plantuml_diagram"]:
+            puml_data = parsed_artifacts["plantuml_diagram"].get("data", {})
+            if isinstance(puml_data, dict) and "plantuml-diagram" in puml_data:
+                puml_text = puml_data["plantuml-diagram"]
+                # Save as .puml file
+                fileio.write_file_content(os.path.join(stage3_dir, "diagram.puml"), puml_text)
+                # Also save as output-data.json (raw text)
+                fileio.write_file_content(os.path.join(stage3_dir, "output-data.json"), puml_text)
+                logger.info("Saved PlantUML diagram to Stage 3 directory.")
+        
+        # --- 5. Run deterministic audits (no LLM calls) ---
+        logger.info("Running deterministic audits on extracted artifacts...")
+        try:
+            # Import deterministic auditors
+            from utils_audit_operation_model import audit_operation_model
+            from utils_audit_scenario import audit_scenario
+            from utils_audit_diagram import audit_diagram
+            
+            # Audit Stage 1: Operation Model
+            if parsed_artifacts["operation_model"]:
+                op_model_data = parsed_artifacts["operation_model"].get("data")
+                if op_model_data and isinstance(op_model_data, dict):
+                    op_model_raw = json.dumps(op_model_data, indent=2, ensure_ascii=False)
+                    audit_result = audit_operation_model(op_model_data, op_model_raw)
+                    
+                    # Save audit result
+                    audit_dir = os.path.join(output_dir, "1_lucim_operation_model", "iter-1", "2-auditor")
+                    os.makedirs(audit_dir, exist_ok=True)
+                    
+                    # Format audit result as output-data.json (plain text)
+                    audit_text = json.dumps({
+                        "verdict": "compliant" if audit_result.get("verdict") else "non-compliant",
+                        "non-compliant-rules": [v.get("id") for v in audit_result.get("violations", [])],
+                        "violations": audit_result.get("violations", [])
+                    }, indent=2, ensure_ascii=False)
+                    fileio.write_file_content(os.path.join(audit_dir, "output-data.json"), audit_text)
+                    logger.info(f"Operation Model audit: {'COMPLIANT' if audit_result.get('verdict') else 'NON-COMPLIANT'}")
+            
+            # Audit Stage 2: Scenario
+            if parsed_artifacts["scenario"]:
+                scenario_data = parsed_artifacts["scenario"].get("data")
+                if scenario_data:
+                    scenario_raw = json.dumps(scenario_data, indent=2, ensure_ascii=False) if isinstance(scenario_data, dict) else str(scenario_data)
+                    # Pass operation model for scenario audit if available
+                    op_model_for_audit = parsed_artifacts["operation_model"].get("data") if parsed_artifacts["operation_model"] else None
+                    audit_result = audit_scenario(scenario_data, scenario_raw, operation_model=op_model_for_audit)
+                    
+                    # Save audit result
+                    audit_dir = os.path.join(output_dir, "2_lucim_scenario", "iter-1", "2-auditor")
+                    os.makedirs(audit_dir, exist_ok=True)
+                    
+                    audit_text = json.dumps({
+                        "verdict": "compliant" if audit_result.get("verdict") else "non-compliant",
+                        "non-compliant-rules": [v.get("id") for v in audit_result.get("violations", [])],
+                        "violations": audit_result.get("violations", [])
+                    }, indent=2, ensure_ascii=False)
+                    fileio.write_file_content(os.path.join(audit_dir, "output-data.json"), audit_text)
+                    logger.info(f"Scenario audit: {'COMPLIANT' if audit_result.get('verdict') else 'NON-COMPLIANT'}")
+            
+            # Audit Stage 3: PlantUML Diagram
+            if parsed_artifacts["plantuml_diagram"]:
+                puml_data = parsed_artifacts["plantuml_diagram"].get("data", {})
+                if isinstance(puml_data, dict) and "plantuml-diagram" in puml_data:
+                    puml_text = puml_data["plantuml-diagram"]
+                    puml_raw = puml_text
+                    
+                    # Pass operation model and scenario for diagram audit
+                    op_model_for_audit = parsed_artifacts["operation_model"].get("data") if parsed_artifacts["operation_model"] else None
+                    scenario_for_audit = parsed_artifacts["scenario"].get("data") if parsed_artifacts["scenario"] else None
+                    
+                    audit_result = audit_diagram(
+                        puml_text,
+                        puml_raw,
+                        svg_path=None,  # No SVG validation in single-call mode
+                        operation_model=op_model_for_audit,
+                        scenario=scenario_for_audit
+                    )
+                    
+                    # Save audit result
+                    audit_dir = os.path.join(output_dir, "3_lucim_plantuml_diagram", "iter-1", "2-auditor")
+                    os.makedirs(audit_dir, exist_ok=True)
+                    
+                    # Format matches orchestrator format
+                    audit_data = audit_result.get("data", {})
+                    audit_text = json.dumps(audit_data, indent=2, ensure_ascii=False)
+                    fileio.write_file_content(os.path.join(audit_dir, "output-data.json"), audit_text)
+                    logger.info(f"PlantUML Diagram audit: {audit_data.get('verdict', 'unknown').upper()}")
+        
+        except Exception as audit_error:
+            logger.error(f"Error during deterministic audits: {audit_error}", exc_info=True)
+            # Continue execution even if audits fail
 
     except Exception as e:
         logger.error(f"Failed to process or save outputs: {e}", exc_info=True)
@@ -511,7 +744,7 @@ def main():
     except Exception as e:
         logger.warning(f"Could not persist overall summary: {e}")
 
-    logger.info(f"--- Agent Run Finished: {run_name} ---")
+    logger.info(f"--- Agent Run Finished: {run_name} (Single-Call Mode) ---")
 
 if __name__ == "__main__":
     main()
