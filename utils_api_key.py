@@ -237,14 +237,35 @@ def validate_openai_key(api_key: Optional[str] = None) -> bool:
 
 
 def get_gemini_api_key() -> str:
-    """Return Gemini API key from environment with common fallbacks."""
+    """Return Gemini API key from environment after loading .env files (workspace root priority)."""
     load_env_files()
-    key = os.getenv("GOOGLE_GEMINI_KEY") or os.getenv("GEMINI_API_KEY") or os.getenv("GEMINI_KEY")
+    # Support common env var names for Gemini API keys, with GEMINI_API_KEY as primary
+    key = (
+        os.getenv("GEMINI_API_KEY")
+        or os.getenv("GOOGLE_GEMINI_API_KEY")
+        or os.getenv("GENAI_API_KEY")
+        or os.getenv("GOOGLE_GEMINI_KEY")
+        or os.getenv("GEMINI_KEY")
+    )
     if not key:
+        # Determine workspace root (parent of code directory)
+        code_dir = Path(__file__).parent
+        workspace_root = code_dir.parent
         raise ValueError(
-            "No Gemini API key found. Please set GOOGLE_GEMINI_KEY (or GEMINI_API_KEY / GEMINI_KEY) in your .env file."
+            "GEMINI_API_KEY not found in environment variables. "
+            f"Please set GEMINI_API_KEY in your .env file at: {workspace_root / '.env'}"
         )
-    return clean_api_key(key)
+    # Clean the key to remove any formatting issues
+    key = clean_api_key(key)
+    if not key:
+        # Determine workspace root (parent of code directory)
+        code_dir = Path(__file__).parent
+        workspace_root = code_dir.parent
+        raise ValueError(
+            "GEMINI_API_KEY is invalid or empty. "
+            f"Please check your .env file at: {workspace_root / '.env'}"
+        )
+    return key
 
 
 def validate_gemini_key(api_key: Optional[str] = None) -> bool:
