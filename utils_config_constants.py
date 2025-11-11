@@ -59,8 +59,8 @@ AVAILABLE_MODELS = [
     # Additional providers/models
     "gemini-flash-latest",          # latest gemini flash
     "gemini-2.5-pro",               # gemini 2.5 Pro
-    "mistral-reasoning-latest",     # most recent reasoning Mistral
-    "llama-reasoning-latest"        # most recent reasoning Llama
+    "mistralai/mistral-small-3.2-24b-instruct",     # most recent reasoning Mistral
+    "meta-llama/llama-3.3-70b-instruct"        # most recent reasoning Llama
 ]
 
 # Default model derived from AVAILABLE_MODELS
